@@ -1,32 +1,2176 @@
-<!doctype html><html><head><meta charset="utf-8"><title>Email Blast Dashboard</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+
+<title>Email Blast Dashboard</title>
+
 <style>
-body{font-family:Arial;margin:24px;background:#f5f6f8;color:#182235}h1{margin-bottom:6px}.bar{display:flex;gap:10px;margin:16px 0;align-items:center}
-button,label{background:#b40000;color:white;padding:10px 14px;border:0;border-radius:7px;font-weight:bold;cursor:pointer}button{background:#26364b}input[type=file]{display:none}
-table{border-collapse:collapse;width:100%;background:white}th,td{border:1px solid #ddd;padding:9px;text-align:center}thead th{background:#b40000;color:white}.cid{background:#eee;color:#222}
-tbody td:first-child{background:#b40000;color:white;text-align:left;font-weight:bold}tfoot td{background:#dfe4e1;font-weight:bold}.metric small{display:block;margin-top:3px}
-.setup{background:#fff4d6;padding:12px;margin:12px 0;display:none}.setup.show{display:block}.setup div{display:grid;grid-template-columns:2fr 1fr 2fr;gap:8px;margin:6px 0}.setup input{padding:7px}
-.donut{width:68px;height:68px;border-radius:50%;margin:auto;position:relative;background:conic-gradient(#16708f calc(var(--p)*1%),white 0);border:1px solid #ddd}.donut:after{content:"";position:absolute;inset:14px;background:white;border-radius:50%}.donut span{position:absolute;inset:0;display:grid;place-items:center;z-index:2;font-weight:bold}
-.note{font-size:12px;padding:12px;background:white}
-</style></head><body>
-<h1>Summary of Email Blast Result</h1><div>Local browser version — CSV data is processed on this computer.</div>
-<div class="bar"><label>Import CSV Files<input id="files" type="file" multiple accept=".csv"></label><button id="apply">Apply DNA / Criteria</button><span id="status">No files imported.</span></div>
-<div id="setup" class="setup"></div>
-<table><thead><tr><th class="cid" rowspan="2">CAMPAIGN ID</th><th rowspan="2">CRITERIA</th><th colspan="2">DELIVERY</th><th colspan="5">FAILED</th><th colspan="2">PERFORMANCE</th><th rowspan="2">Total<br>Delivered</th><th rowspan="2">Email<br>Success (%)</th></tr>
-<tr><th>Total<br>Customers</th><th>Delivery<br>Attempt</th><th>Failed<br>(C - D)</th><th>Hard<br>Bounce</th><th>Soft<br>Bounce</th><th>Email<br>Failed</th><th>Total Failed</th><th>Open</th><th>Click</th></tr></thead><tbody id="body"></tbody><tfoot id="foot"></tfoot></table>
-<div class="note">Note: Delivery Attempt represents emails processed by the delivery system, not successfully delivered emails.</div>
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f5f6f8;
+  color: #182235;
+}
+
+.page {
+  width: 100%;
+  max-width: 100%;
+  padding: 18px;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+}
+
+.subtitle {
+  margin-bottom: 16px;
+}
+
+/* =========================
+   TOOLBAR
+========================= */
+
+.bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  margin: 16px 0;
+}
+
+.bar #status {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.right-actions {
+  display: flex;
+  gap: 10px;
+  justify-self: end;
+}
+
+button,
+.file-button {
+  border: 0;
+  border-radius: 7px;
+  padding: 10px 14px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.file-button {
+  display: inline-block;
+  background: #b40000;
+  color: white;
+}
+
+button {
+  background: #26364b;
+  color: white;
+}
+
+button:hover,
+.file-button:hover {
+  opacity: .9;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+/* =========================
+   CAMPAIGN SETUP
+========================= */
+
+.setup {
+  display: none;
+  margin: 12px 0;
+  padding: 12px;
+  background: #fff4d6;
+  border-radius: 6px;
+}
+
+.setup.show {
+  display: block;
+}
+
+.setup-title {
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.setup-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr;
+  gap: 8px;
+  margin: 6px 0;
+  align-items: center;
+}
+
+.setup input {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: white;
+}
+
+table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 9px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+thead th {
+  background: #b40000;
+  color: white;
+  font-weight: bold;
+}
+
+thead .cid {
+  background: #eee;
+  color: #222;
+}
+
+tbody td:first-child {
+  min-width: 260px;
+  background: #b40000;
+  color: white;
+  text-align: left;
+  font-weight: bold;
+}
+
+tbody td:nth-child(2) {
+  min-width: 180px;
+  text-align: left;
+}
+
+tfoot td {
+  background: #dfe4e1;
+  font-weight: bold;
+}
+
+.metric small {
+  display: block;
+  margin-top: 3px;
+}
+
+/* =========================
+   EMAIL SUCCESS DONUT
+========================= */
+
+.donut {
+  --p: 0;
+
+  position: relative;
+  width: 68px;
+  height: 68px;
+  margin: auto;
+
+  border: 1px solid #ddd;
+  border-radius: 50%;
+
+  background:
+    conic-gradient(
+      #16708f calc(var(--p) * 1%),
+      white 0
+    );
+}
+
+.donut::after {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  background: white;
+  border-radius: 50%;
+}
+
+.donut span {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  display: grid;
+  place-items: center;
+
+  font-weight: bold;
+}
+
+/* =========================
+   EXPORT PER CAMPAIGN
+========================= */
+
+.row-export {
+  display: inline-block;
+  margin-top: 7px;
+
+  color: #0b5ea8;
+  font-size: 11px;
+  font-weight: bold;
+  text-decoration: underline;
+
+  cursor: pointer;
+}
+
+.row-export:hover {
+  color: #063d70;
+}
+
+/* =========================
+   NOTE
+========================= */
+
+.note {
+  padding: 12px;
+  background: white;
+  font-size: 12px;
+  white-space: normal;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 700px) {
+
+  .page {
+    padding: 14px 10px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  .bar {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "import actions"
+      "status status";
+
+    gap: 8px;
+  }
+
+  .bar > .file-button {
+    grid-area: import;
+    justify-self: start;
+  }
+
+  .bar #status {
+    grid-area: status;
+    white-space: normal;
+    font-size: 12px;
+  }
+
+  .right-actions {
+    grid-area: actions;
+    gap: 6px;
+  }
+
+  .right-actions button,
+  .file-button {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .setup {
+    overflow-x: auto;
+  }
+
+  .setup-row {
+    min-width: 520px;
+    grid-template-columns:
+      minmax(190px, 2fr)
+      120px
+      minmax(150px, 2fr);
+  }
+
+  th,
+  td {
+    padding: 8px 7px;
+    font-size: 12px;
+  }
+
+  .note {
+    font-size: 11px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+  <h1>Summary of Email Blast Result</h1>
+
+  <div class="subtitle">
+    Local browser version — CSV data is processed on this computer.
+  </div>
+
+  <!-- =========================
+       TOOLBAR
+  ========================== -->
+
+  <div class="bar">
+
+    <label class="file-button">
+      Import CSV Files
+
+      <input
+        id="files"
+        type="file"
+        multiple
+        accept=".csv"
+      >
+    </label>
+
+    <span id="status">
+      No files imported.
+    </span>
+
+    <div class="right-actions">
+
+      <button id="apply">
+        Apply DNA / Criteria
+      </button>
+
+      <button id="export">
+        Export to CSV
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- =========================
+       DNA / CRITERIA SETUP
+  ========================== -->
+
+  <div
+    id="setup"
+    class="setup"
+  ></div>
+
+  <!-- =========================
+       DASHBOARD TABLE
+  ========================== -->
+
+  <div class="table-scroll">
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th
+            class="cid"
+            rowspan="2"
+          >
+            CAMPAIGN ID
+          </th>
+
+          <th rowspan="2">
+            CRITERIA
+          </th>
+
+          <th colspan="2">
+            DELIVERY
+          </th>
+
+          <th colspan="5">
+            FAILED
+          </th>
+
+          <th colspan="2">
+            PERFORMANCE
+          </th>
+
+          <th rowspan="2">
+            Total<br>
+            Delivered
+          </th>
+
+          <th rowspan="2">
+            Email<br>
+            Success (%)
+          </th>
+
+        </tr>
+
+        <tr>
+
+          <th>
+            Database<br>
+            DNA (C)
+          </th>
+
+          <th>
+            Delivery<br>
+            Attempt (D)
+          </th>
+
+          <th>
+            Failed<br>
+            (C - D)
+          </th>
+
+          <th>
+            Hard<br>
+            Bounce
+          </th>
+
+          <th>
+            Soft<br>
+            Bounce
+          </th>
+
+          <th>
+            Invalid<br>
+            Email
+          </th>
+
+          <th>
+            Total Failed
+          </th>
+
+          <th>
+            Open
+          </th>
+
+          <th>
+            Click
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody id="body"></tbody>
+
+      <tfoot id="foot"></tfoot>
+
+    </table>
+
+  </div>
+
+  <div class="note">
+    Note: Delivery Attempt includes all email records processed by
+    the delivery system, including records with "Delivery failed";
+    it does not mean successfully delivered emails.
+  </div>
+
+</div>
+
+
 <script>
-let M={},META={}; const q=s=>document.querySelector(s), ne=v=>v!=null&&String(v).trim()!=="";
-function parse(t){let R=[],r=[],f="",z=false;for(let i=0;i<t.length;i++){let c=t[i],n=t[i+1];if(c=='"'){if(z&&n=='"'){f+='"';i++}else z=!z}else if(c==','&&!z){r.push(f);f=""}else if((c=='\n'||c=='\r')&&!z){if(c=='\r'&&n=='\n')i++;r.push(f);f="";if(r.some(ne))R.push(r);r=[]}else f+=c}if(f||r.length){r.push(f);R.push(r)}return R}
-function camp(id){let m=(id||"").trim().match(/^(.*)-(\d{6})$/);return m?m[1]:(id||"").trim()}
-function typ(n){n=n.toLowerCase();if(n.includes("permanent bounce"))return"hard";if(n.includes("temporary bounce"))return"soft";if(n.includes("spam"))return"spam";if(n.includes("open report")||n.includes("open_report")||n.includes("openreport"))return"open";return"x"}
-function gm(c){return M[c]||(M[c]={cust:new Map(),hard:new Set(),soft:new Set(),spam:new Set()})}
-async function load(fs){M={};q("#status").textContent="Processing…";for(let F of fs){let T=typ(F.name),R=parse(await F.text());if(R.length<2)continue;let H=R[0].map(x=>x.trim().toUpperCase()),ii=H.indexOf("ALT_CUSTOMER_ID"),si=H.indexOf("SENT_DATE"),oi=H.indexOf("OPEN_DATE");if(ii<0)continue;
-for(let a of R.slice(1)){let id=(a[ii]||"").trim();if(!id)continue;let c=camp(id),m=gm(c);if(T=="open"){let x=m.cust.get(id)||{att:0,ef:0,op:0,cl:0},s=si>=0?(a[si]||"").trim():"";if(s&&s.toLowerCase()!="delivery failed"&&/\d/.test(s))x.att=1;if(s.toLowerCase()=="delivery failed")x.ef=1;if(oi>=0&&ne(a[oi]))x.op=1;for(let j=4;j<a.length;j++)if(ne(a[j])){x.cl=1;break}m.cust.set(id,x)}else if(T=="hard")m.hard.add(id);else if(T=="soft")m.soft.add(id);else if(T=="spam")m.spam.add(id)}}
-setup();render();q("#status").textContent=`${fs.length} file(s), ${Object.keys(M).length} campaign(s) processed.`}
-function setup(){let cs=Object.keys(M).sort(),s=q("#setup");s.className=cs.length?"setup show":"setup";s.innerHTML="<b>Campaign setup</b>"+cs.map(c=>{META[c]??={dna:"",criteria:"put criteria here"};return `<div><span>${c}</span><input class="dna" data-c="${c}" value="${META[c].dna}" placeholder="Data from DNA"><input class="crit" data-c="${c}" value="${META[c].criteria}"></div>`}).join("")}
-function calc(c){let m=M[c],att=0,ef=0,op=0,cl=0;for(let x of m.cust.values()){att+=x.att;ef+=x.ef;op+=x.op;cl+=x.cl}let dna=+META[c]?.dna||0,h=m.hard.size,s=m.soft.size,fail=dna?Math.max(0,dna-att):0,del=Math.max(0,att-h-s-ef);return{dna,att,fail,h,s,ef,tf:fail+h+s+ef,op,cl,del,suc:dna?del/dna:0}}
-let num=n=>Number(n||0).toLocaleString("en-US"),pc=(n,d)=>d?`(${(n/d*100).toFixed(2)}%)`:"(n%)",mt=(n,p)=>`<div class=metric><b>${num(n)}</b><small>${p}</small></div>`;
-function render(){let cs=Object.keys(M).sort(),B=q("#body"),F=q("#foot"),t={dna:0,att:0,fail:0,h:0,s:0,ef:0,tf:0,op:0,cl:0,del:0};B.innerHTML="";F.innerHTML="";for(let c of cs){let x=calc(c);Object.keys(t).forEach(k=>t[k]+=x[k]);B.innerHTML+=`<tr><td>${c}</td><td>${META[c]?.criteria||"put criteria here"}</td><td>${num(x.dna)}</td><td>${mt(x.att,pc(x.att,x.dna))}</td><td>${mt(x.fail,pc(x.fail,x.dna))}</td><td>${mt(x.h,pc(x.h,x.att))}</td><td>${mt(x.s,pc(x.s,x.att))}</td><td>${mt(x.ef,pc(x.ef,x.dna))}</td><td><b>${num(x.tf)}</b></td><td>${mt(x.op,pc(x.op,x.del))}</td><td>${mt(x.cl,pc(x.cl,x.del))}</td><td><b>${num(x.del)}</b></td><td><div class=donut style="--p:${x.suc*100}"><span>${(x.suc*100).toFixed(0)}%</span></div></td></tr>`}
-if(cs.length){let s=t.dna?t.del/t.dna:0;F.innerHTML=`<tr><td colspan=2>Grand Total</td><td>${num(t.dna)}</td><td>${num(t.att)}</td><td>${num(t.fail)}</td><td>${num(t.h)}</td><td>${num(t.s)}</td><td>${num(t.ef)}</td><td>${num(t.tf)}</td><td>${num(t.op)}</td><td>${num(t.cl)}</td><td>${num(t.del)}</td><td>${(s*100).toFixed(0)}%</td></tr>`}}
-q("#files").onchange=e=>load([...e.target.files]);q("#apply").onclick=()=>{document.querySelectorAll(".dna").forEach(i=>(META[i.dataset.c]??={}).dna=i.value);document.querySelectorAll(".crit").forEach(i=>(META[i.dataset.c]??={}).criteria=i.value||"put criteria here");render()}
-</script></body></html>
+
+/* ==========================================================
+   GLOBAL DATA
+========================================================== */
+
+let M = {};
+let META = {};
+
+const q = selector =>
+  document.querySelector(selector);
+
+const ne = value =>
+  value != null &&
+  String(value).trim() !== "";
+
+
+/* ==========================================================
+   NUMBER FORMAT
+========================================================== */
+
+const num = n =>
+  Number(n || 0).toLocaleString("en-US");
+
+
+const pc = (n, d) => {
+
+  if (!d) {
+    return "(n%)";
+  }
+
+  return `(${(n / d * 100).toFixed(2)}%)`;
+};
+
+
+const metric = (n, percentage) => `
+  <div class="metric">
+    <b>${num(n)}</b>
+    <small>${percentage}</small>
+  </div>
+`;
+
+
+/* ==========================================================
+   CSV PARSER
+========================================================== */
+
+function parse(text) {
+
+  const rows = [];
+
+  let row = [];
+  let field = "";
+  let quoted = false;
+
+  for (let i = 0; i < text.length; i++) {
+
+    const char = text[i];
+    const next = text[i + 1];
+
+    if (char === '"') {
+
+      if (quoted && next === '"') {
+
+        field += '"';
+        i++;
+
+      } else {
+
+        quoted = !quoted;
+
+      }
+
+    } else if (
+      char === "," &&
+      !quoted
+    ) {
+
+      row.push(field);
+      field = "";
+
+    } else if (
+      (char === "\n" || char === "\r") &&
+      !quoted
+    ) {
+
+      if (
+        char === "\r" &&
+        next === "\n"
+      ) {
+        i++;
+      }
+
+      row.push(field);
+      field = "";
+
+      if (row.some(ne)) {
+        rows.push(row);
+      }
+
+      row = [];
+
+    } else {
+
+      field += char;
+
+    }
+  }
+
+
+  if (
+    field ||
+    row.length
+  ) {
+
+    row.push(field);
+
+    if (row.some(ne)) {
+      rows.push(row);
+    }
+  }
+
+
+  return rows;
+}
+
+
+/* ==========================================================
+   CAMPAIGN ID
+========================================================== */
+
+function camp(id) {
+
+  const value =
+    (id || "").trim();
+
+  /*
+    Example:
+
+    20260812_Regulatory-eDM-B1_1604-000001
+
+    becomes:
+
+    20260812_Regulatory-eDM-B1_1604
+  */
+
+  const match =
+    value.match(
+      /^(.*)-(\d{6})$/
+    );
+
+
+  return match
+    ? match[1]
+    : value;
+}
+
+
+/* ==========================================================
+   FILE TYPE DETECTION
+========================================================== */
+
+function typ(filename) {
+
+  const name =
+    filename
+      .toLowerCase()
+      .replace(
+        /[\s_\-]+/g,
+        " "
+      );
+
+
+  if (
+    (
+      name.includes("permanent") ||
+      name.includes("hard")
+    ) &&
+    name.includes("bounce")
+  ) {
+
+    return "hard";
+  }
+
+
+  if (
+    (
+      name.includes("temporary") ||
+      name.includes("soft")
+    ) &&
+    name.includes("bounce")
+  ) {
+
+    return "soft";
+  }
+
+
+  if (
+    name.includes("spam")
+  ) {
+
+    return "spam";
+  }
+
+
+  if (
+    name.includes("open") &&
+    name.includes("report")
+  ) {
+
+    return "open";
+  }
+
+
+  return "x";
+}
+
+
+/* ==========================================================
+   GET / CREATE CAMPAIGN OBJECT
+========================================================== */
+
+function getCampaign(campaign) {
+
+  if (!M[campaign]) {
+
+    M[campaign] = {
+
+      cust: new Map(),
+
+      hard: new Set(),
+
+      soft: new Set(),
+
+      spam: new Set()
+
+    };
+
+  }
+
+
+  return M[campaign];
+}
+
+
+/* ==========================================================
+   IMPORT CSV FILES
+========================================================== */
+
+async function load(files) {
+
+  M = {};
+
+  const diag = {
+
+    open: 0,
+    hard: 0,
+    soft: 0,
+    spam: 0,
+
+    unknown: 0,
+
+    openRows: 0,
+    hardRows: 0,
+    softRows: 0,
+    spamRows: 0
+
+  };
+
+
+  q("#status").textContent =
+    "Processing…";
+
+
+  const normalizeHeader = header =>
+
+    String(header || "")
+
+      .replace(
+        /^\uFEFF/,
+        ""
+      )
+
+      .trim()
+
+      .toUpperCase()
+
+      .replace(
+        /[\s\-]+/g,
+        "_"
+      );
+
+
+  for (const file of files) {
+
+    const type =
+      typ(file.name);
+
+
+    if (type === "x") {
+
+      diag.unknown++;
+
+      continue;
+    }
+
+
+    const text =
+      await file.text();
+
+
+    const rows =
+      parse(text);
+
+
+    if (rows.length < 2) {
+      continue;
+    }
+
+
+    const headers =
+      rows[0].map(
+        normalizeHeader
+      );
+
+
+    const customerIndex =
+      headers.findIndex(
+        h =>
+          h === "ALT_CUSTOMER_ID" ||
+          h === "ALTCUSTOMERID"
+      );
+
+
+    const sentIndex =
+      headers.findIndex(
+        h =>
+          h === "SENT_DATE" ||
+          h === "SENTDATE"
+      );
+
+
+    const openIndex =
+      headers.findIndex(
+        h =>
+          h === "OPEN_DATE" ||
+          h === "OPENDATE"
+      );
+
+
+    if (customerIndex < 0) {
+
+      diag.unknown++;
+
+      continue;
+    }
+
+
+    diag[type]++;
+
+
+    for (
+      const row of rows.slice(1)
+    ) {
+
+      const customerID =
+        (row[customerIndex] || "")
+          .trim();
+
+
+      if (!customerID) {
+        continue;
+      }
+
+
+      const campaign =
+        camp(customerID);
+
+
+      const campaignData =
+        getCampaign(campaign);
+
+
+      /* ====================================================
+         OPEN REPORT
+      ==================================================== */
+
+      if (type === "open") {
+
+        diag.openRows++;
+
+
+        const sent =
+          sentIndex >= 0
+            ? (row[sentIndex] || "").trim()
+            : "";
+
+
+        const open =
+          openIndex >= 0
+            ? (row[openIndex] || "").trim()
+            : "";
+
+
+        const sentLower =
+          sent.toLowerCase();
+
+
+        let customer =
+          campaignData.cust.get(
+            customerID
+          ) || {
+
+            att: 0,
+            ef: 0,
+            op: 0,
+            cl: 0
+
+          };
+
+
+        /*
+          DELIVERY ATTEMPT
+
+          Any non-empty SENT_DATE
+          counts as an attempt.
+
+          Therefore:
+
+          timestamp = attempt
+          Delivery failed = attempt
+        */
+
+        if (ne(sent)) {
+
+          customer.att = 1;
+
+        }
+
+
+        /*
+          INVALID EMAIL
+
+          SENT_DATE exactly:
+
+          Delivery failed
+        */
+
+        if (
+          sentLower ===
+          "delivery failed"
+        ) {
+
+          customer.ef = 1;
+
+        }
+
+
+        /*
+          UNIQUE OPEN
+        */
+
+        if (ne(open)) {
+
+          customer.op = 1;
+
+        }
+
+
+        /*
+          UNIQUE CLICK
+
+          A-D = fixed columns.
+
+          E onwards =
+          link timestamps.
+
+          Any value from column E onward
+          means the customer clicked.
+        */
+
+        for (
+          let column = 4;
+          column < row.length;
+          column++
+        ) {
+
+          if (ne(row[column])) {
+
+            customer.cl = 1;
+
+            break;
+          }
+
+        }
+
+
+        campaignData.cust.set(
+          customerID,
+          customer
+        );
+
+
+      /* ====================================================
+         HARD BOUNCE
+      ==================================================== */
+
+      } else if (
+        type === "hard"
+      ) {
+
+        diag.hardRows++;
+
+        campaignData.hard.add(
+          customerID
+        );
+
+
+      /* ====================================================
+         SOFT BOUNCE
+      ==================================================== */
+
+      } else if (
+        type === "soft"
+      ) {
+
+        diag.softRows++;
+
+        campaignData.soft.add(
+          customerID
+        );
+
+
+      /* ====================================================
+         SPAM
+      ==================================================== */
+
+      } else if (
+        type === "spam"
+      ) {
+
+        diag.spamRows++;
+
+        campaignData.spam.add(
+          customerID
+        );
+
+      }
+
+    }
+
+  }
+
+
+  setup();
+
+  render();
+
+
+  q("#status").textContent =
+
+    `${files.length} file(s), ` +
+
+    `${Object.keys(M).length} campaign(s) processed. ` +
+
+    `Open ${num(diag.openRows)} rows | ` +
+
+    `Hard ${num(diag.hardRows)} rows | ` +
+
+    `Soft ${num(diag.softRows)} rows | ` +
+
+    `SPAM ${num(diag.spamRows)} rows` +
+
+    (
+      diag.unknown
+        ? ` | ${diag.unknown} unrecognized file(s)`
+        : ""
+    );
+}
+
+
+/* ==========================================================
+   DNA / CRITERIA SETUP
+========================================================== */
+
+function setup() {
+
+  const campaigns =
+    Object.keys(M).sort();
+
+
+  const setupBox =
+    q("#setup");
+
+
+  setupBox.className =
+    campaigns.length
+      ? "setup show"
+      : "setup";
+
+
+  setupBox.innerHTML =
+
+    campaigns.length
+      ? `
+
+        <div class="setup-title">
+          Campaign setup
+        </div>
+
+        ${campaigns.map(campaign => {
+
+          if (!META[campaign]) {
+
+            META[campaign] = {
+
+              dna: "",
+
+              criteria:
+                "put criteria here"
+
+            };
+
+          }
+
+
+          return `
+
+            <div class="setup-row">
+
+              <span>
+                ${campaign}
+              </span>
+
+              <input
+                class="dna"
+                data-c="${campaign}"
+                value="${META[campaign].dna}"
+                placeholder="Database DNA"
+              >
+
+              <input
+                class="crit"
+                data-c="${campaign}"
+                value="${META[campaign].criteria}"
+                placeholder="put criteria here"
+              >
+
+            </div>
+
+          `;
+
+        }).join("")}
+
+      `
+      : "";
+}
+
+
+/* ==========================================================
+   CALCULATION
+========================================================== */
+
+function calc(campaign) {
+
+  const data =
+    M[campaign];
+
+
+  let attempt = 0;
+
+  let invalidEmail = 0;
+
+  let uniqueOpen = 0;
+
+  let uniqueClick = 0;
+
+
+  for (
+    const customer
+    of data.cust.values()
+  ) {
+
+    attempt +=
+      customer.att;
+
+    invalidEmail +=
+      customer.ef;
+
+    uniqueOpen +=
+      customer.op;
+
+    uniqueClick +=
+      customer.cl;
+
+  }
+
+
+  const dna =
+    Number(
+      META[campaign]?.dna || 0
+    );
+
+
+  const hardBounce =
+    data.hard.size;
+
+
+  const softBounce =
+    data.soft.size;
+
+
+  /*
+    FAILED (C - D)
+
+    Database DNA
+    minus
+    Delivery Attempt
+  */
+
+  const failed =
+
+    dna
+      ? Math.max(
+          0,
+          dna - attempt
+        )
+      : 0;
+
+
+  /*
+    TOTAL DELIVERED
+
+    Delivery Attempt
+    - Hard Bounce
+    - Soft Bounce
+    - Invalid Email
+  */
+
+  const delivered =
+
+    Math.max(
+
+      0,
+
+      attempt
+      - hardBounce
+      - softBounce
+      - invalidEmail
+
+    );
+
+
+  /*
+    TOTAL FAILED
+  */
+
+  const totalFailed =
+
+    failed
+    + hardBounce
+    + softBounce
+    + invalidEmail;
+
+
+  /*
+    EMAIL SUCCESS RATE
+
+    Total Delivered
+    /
+    Database DNA
+  */
+
+  const successRate =
+
+    dna
+      ? delivered / dna
+      : 0;
+
+
+  return {
+
+    dna,
+
+    att:
+      attempt,
+
+    fail:
+      failed,
+
+    h:
+      hardBounce,
+
+    s:
+      softBounce,
+
+    ef:
+      invalidEmail,
+
+    tf:
+      totalFailed,
+
+    op:
+      uniqueOpen,
+
+    cl:
+      uniqueClick,
+
+    del:
+      delivered,
+
+    suc:
+      successRate
+
+  };
+}
+
+
+/* ==========================================================
+   RENDER DASHBOARD
+========================================================== */
+
+function render() {
+
+  const campaigns =
+    Object.keys(M).sort();
+
+
+  const body =
+    q("#body");
+
+
+  const foot =
+    q("#foot");
+
+
+  body.innerHTML = "";
+  foot.innerHTML = "";
+
+
+  const total = {
+
+    dna: 0,
+
+    att: 0,
+
+    fail: 0,
+
+    h: 0,
+
+    s: 0,
+
+    ef: 0,
+
+    tf: 0,
+
+    op: 0,
+
+    cl: 0,
+
+    del: 0
+
+  };
+
+
+  for (
+    const campaign
+    of campaigns
+  ) {
+
+    const x =
+      calc(campaign);
+
+
+    for (
+      const key
+      of Object.keys(total)
+    ) {
+
+      total[key] +=
+        x[key];
+
+    }
+
+
+    body.innerHTML += `
+
+      <tr>
+
+        <td>
+          ${campaign}
+        </td>
+
+        <td>
+          ${META[campaign]?.criteria || "put criteria here"}
+        </td>
+
+        <td>
+          ${num(x.dna)}
+        </td>
+
+        <td>
+          ${metric(
+            x.att,
+            pc(
+              x.att,
+              x.dna
+            )
+          )}
+        </td>
+
+        <td>
+          ${metric(
+            x.fail,
+            pc(
+              x.fail,
+              x.dna
+            )
+          )}
+        </td>
+
+        <td>
+          ${metric(
+            x.h,
+            pc(
+              x.h,
+              x.att
+            )
+          )}
+        </td>
+
+        <td>
+          ${metric(
+            x.s,
+            pc(
+              x.s,
+              x.att
+            )
+          )}
+        </td>
+
+        <td>
+          ${metric(
+            x.ef,
+            pc(
+              x.ef,
+              x.dna
+            )
+          )}
+        </td>
+
+        <td>
+          <b>
+            ${num(x.tf)}
+          </b>
+        </td>
+
+        <td>
+          ${metric(
+            x.op,
+            pc(
+              x.op,
+              x.del
+            )
+          )}
+        </td>
+
+        <td>
+          ${metric(
+            x.cl,
+            pc(
+              x.cl,
+              x.del
+            )
+          )}
+        </td>
+
+        <td>
+
+          <b>
+            ${num(x.del)}
+          </b>
+
+          <br>
+
+          <a
+            href="#"
+            class="row-export"
+            data-c="${campaign}"
+          >
+            Export data
+          </a>
+
+        </td>
+
+        <td>
+
+          <div
+            class="donut"
+            style="--p:${x.suc * 100}"
+          >
+
+            <span>
+              ${(x.suc * 100).toFixed(0)}%
+            </span>
+
+          </div>
+
+        </td>
+
+      </tr>
+
+    `;
+
+  }
+
+
+  if (campaigns.length) {
+
+    const success =
+
+      total.dna
+        ? total.del / total.dna
+        : 0;
+
+
+    foot.innerHTML = `
+
+      <tr>
+
+        <td colspan="2">
+          Grand Total
+        </td>
+
+        <td>
+          ${num(total.dna)}
+        </td>
+
+        <td>
+          ${num(total.att)}
+        </td>
+
+        <td>
+          ${num(total.fail)}
+        </td>
+
+        <td>
+          ${num(total.h)}
+        </td>
+
+        <td>
+          ${num(total.s)}
+        </td>
+
+        <td>
+          ${num(total.ef)}
+        </td>
+
+        <td>
+          ${num(total.tf)}
+        </td>
+
+        <td>
+          ${num(total.op)}
+        </td>
+
+        <td>
+          ${num(total.cl)}
+        </td>
+
+        <td>
+          ${num(total.del)}
+        </td>
+
+        <td>
+          ${(success * 100).toFixed(0)}%
+        </td>
+
+      </tr>
+
+    `;
+
+  }
+
+}
+
+
+/* ==========================================================
+   APPLY DNA / CRITERIA
+========================================================== */
+
+q("#apply").onclick = () => {
+
+  document
+    .querySelectorAll(".dna")
+    .forEach(input => {
+
+      if (!META[input.dataset.c]) {
+        META[input.dataset.c] = {};
+      }
+
+      META[input.dataset.c].dna =
+        input.value;
+
+    });
+
+
+  document
+    .querySelectorAll(".crit")
+    .forEach(input => {
+
+      if (!META[input.dataset.c]) {
+        META[input.dataset.c] = {};
+      }
+
+      META[input.dataset.c].criteria =
+
+        input.value ||
+        "put criteria here";
+
+    });
+
+
+  render();
+};
+
+
+/* ==========================================================
+   IMPORT EVENT
+========================================================== */
+
+q("#files").onchange =
+  event => {
+
+    load(
+      [
+        ...event.target.files
+      ]
+    );
+
+  };
+
+
+/* ==========================================================
+   CSV HELPERS
+========================================================== */
+
+function csvCell(value) {
+
+  const string =
+    String(
+      value ?? ""
+    );
+
+
+  return `"${string.replace(
+    /"/g,
+    '""'
+  )}"`;
+}
+
+
+function createCSV(rows) {
+
+  return rows
+
+    .map(row =>
+
+      row
+        .map(csvCell)
+        .join(",")
+
+    )
+
+    .join("\r\n");
+}
+
+
+function downloadCSV(
+  csv,
+  filename
+) {
+
+  const blob =
+    new Blob(
+      [
+        "\uFEFF",
+        csv
+      ],
+      {
+        type:
+          "text/csv;charset=utf-8"
+      }
+    );
+
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+
+  const anchor =
+    document.createElement(
+      "a"
+    );
+
+
+  anchor.href =
+    url;
+
+
+  anchor.download =
+    filename;
+
+
+  document.body.appendChild(
+    anchor
+  );
+
+
+  anchor.click();
+
+
+  anchor.remove();
+
+
+  URL.revokeObjectURL(
+    url
+  );
+}
+
+
+/* ==========================================================
+   SUMMARY CSV HEADER
+========================================================== */
+
+function summaryHeader() {
+
+  return [
+
+    "Campaign ID",
+
+    "Criteria",
+
+    "Database DNA (C)",
+
+    "Delivery Attempt (D)",
+
+    "Delivery Attempt %",
+
+    "Failed (C - D)",
+
+    "Failed %",
+
+    "Hard Bounce",
+
+    "Hard Bounce %",
+
+    "Soft Bounce",
+
+    "Soft Bounce %",
+
+    "Invalid Email",
+
+    "Invalid Email %",
+
+    "Total Failed",
+
+    "Unique Open",
+
+    "Open Rate",
+
+    "Unique Click",
+
+    "Click Rate",
+
+    "Total Delivered",
+
+    "Email Success %",
+
+    "SPAM"
+
+  ];
+}
+
+
+/* ==========================================================
+   CAMPAIGN SUMMARY ROW
+========================================================== */
+
+function summaryRow(campaign) {
+
+  const x =
+    calc(campaign);
+
+
+  return [
+
+    campaign,
+
+    META[campaign]?.criteria ||
+      "put criteria here",
+
+    x.dna,
+
+    x.att,
+
+    x.dna
+      ? (x.att / x.dna * 100)
+          .toFixed(2) + "%"
+      : "0.00%",
+
+    x.fail,
+
+    x.dna
+      ? (x.fail / x.dna * 100)
+          .toFixed(2) + "%"
+      : "0.00%",
+
+    x.h,
+
+    x.att
+      ? (x.h / x.att * 100)
+          .toFixed(2) + "%"
+      : "0.00%",
+
+    x.s,
+
+    x.att
+      ? (x.s / x.att * 100)
+          .toFixed(2) + "%"
+      : "0.00%",
+
+    x.ef,
+
+    x.dna
+      ? (x.ef / x.dna * 100)
+          .toFixed(2) + "%"
+      : "0.00%",
+
+    x.tf,
+
+    x.op,
+
+    x.del
+      ? (x.op / x.del * 100)
+          .toFixed(2) + "%"
+      : "0.00%",
+
+    x.cl,
+
+    x.del
+      ? (x.cl / x.del * 100)
+          .toFixed(2) + "%"
+      : "0.00%",
+
+    x.del,
+
+    x.dna
+      ? (x.del / x.dna * 100)
+          .toFixed(2) + "%"
+      : "0.00%",
+
+    M[campaign]?.spam?.size || 0
+
+  ];
+}
+
+
+/* ==========================================================
+   EXPORT ALL CAMPAIGNS
+========================================================== */
+
+function exportAllCSV() {
+
+  const campaigns =
+    Object.keys(M).sort();
+
+
+  if (!campaigns.length) {
+
+    alert(
+      "Import CSV files first."
+    );
+
+    return;
+  }
+
+
+  const rows = [
+
+    summaryHeader()
+
+  ];
+
+
+  const total = {
+
+    dna: 0,
+
+    att: 0,
+
+    fail: 0,
+
+    h: 0,
+
+    s: 0,
+
+    ef: 0,
+
+    tf: 0,
+
+    op: 0,
+
+    cl: 0,
+
+    del: 0,
+
+    spam: 0
+
+  };
+
+
+  for (
+    const campaign
+    of campaigns
+  ) {
+
+    rows.push(
+      summaryRow(campaign)
+    );
+
+
+    const x =
+      calc(campaign);
+
+
+    total.dna += x.dna;
+
+    total.att += x.att;
+
+    total.fail += x.fail;
+
+    total.h += x.h;
+
+    total.s += x.s;
+
+    total.ef += x.ef;
+
+    total.tf += x.tf;
+
+    total.op += x.op;
+
+    total.cl += x.cl;
+
+    total.del += x.del;
+
+    total.spam +=
+      M[campaign]?.spam?.size || 0;
+
+  }
+
+
+  rows.push([
+
+    "Grand Total",
+
+    "",
+
+    total.dna,
+
+    total.att,
+
+    total.dna
+      ? (
+          total.att /
+          total.dna *
+          100
+        ).toFixed(2) + "%"
+      : "0.00%",
+
+    total.fail,
+
+    total.dna
+      ? (
+          total.fail /
+          total.dna *
+          100
+        ).toFixed(2) + "%"
+      : "0.00%",
+
+    total.h,
+
+    total.att
+      ? (
+          total.h /
+          total.att *
+          100
+        ).toFixed(2) + "%"
+      : "0.00%",
+
+    total.s,
+
+    total.att
+      ? (
+          total.s /
+          total.att *
+          100
+        ).toFixed(2) + "%"
+      : "0.00%",
+
+    total.ef,
+
+    total.dna
+      ? (
+          total.ef /
+          total.dna *
+          100
+        ).toFixed(2) + "%"
+      : "0.00%",
+
+    total.tf,
+
+    total.op,
+
+    total.del
+      ? (
+          total.op /
+          total.del *
+          100
+        ).toFixed(2) + "%"
+      : "0.00%",
+
+    total.cl,
+
+    total.del
+      ? (
+          total.cl /
+          total.del *
+          100
+        ).toFixed(2) + "%"
+      : "0.00%",
+
+    total.del,
+
+    total.dna
+      ? (
+          total.del /
+          total.dna *
+          100
+        ).toFixed(2) + "%"
+      : "0.00%",
+
+    total.spam
+
+  ]);
+
+
+  const csv =
+    createCSV(rows);
+
+
+  const stamp =
+    new Date()
+      .toISOString()
+      .slice(0, 10)
+      .replace(
+        /-/g,
+        ""
+      );
+
+
+  downloadCSV(
+
+    csv,
+
+    `Email_Blast_Summary_${stamp}.csv`
+
+  );
+}
+
+
+/* ==========================================================
+   EXPORT ONE CAMPAIGN
+========================================================== */
+
+function exportCampaignCSV(
+  campaign
+) {
+
+  if (!M[campaign]) {
+    return;
+  }
+
+
+  const rows = [
+
+    summaryHeader(),
+
+    summaryRow(campaign)
+
+  ];
+
+
+  const csv =
+    createCSV(rows);
+
+
+  const safeCampaign =
+    campaign.replace(
+      /[\\/:*?"<>|]/g,
+      "_"
+    );
+
+
+  downloadCSV(
+
+    csv,
+
+    `${safeCampaign}_Summary.csv`
+
+  );
+}
+
+
+/* ==========================================================
+   EXPORT BUTTON
+========================================================== */
+
+q("#export").onclick =
+  exportAllCSV;
+
+
+/* ==========================================================
+   EXPORT DATA PER ROW
+========================================================== */
+
+document.addEventListener(
+  "click",
+  event => {
+
+    const link =
+      event.target.closest(
+        ".row-export"
+      );
+
+
+    if (!link) {
+      return;
+    }
+
+
+    event.preventDefault();
+
+
+    exportCampaignCSV(
+      link.dataset.c
+    );
+
+  }
+);
+
+</script>
+
+</body>
+</html>
