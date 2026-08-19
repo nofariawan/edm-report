@@ -2,12 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1,viewport-fit=cover"
+>
 <title>Email Blast Dashboard</title>
 
 <style>
-*{box-sizing:border-box}
-html,body{max-width:100%;overflow-x:hidden}
+*{
+  box-sizing:border-box
+}
+
+html,
+body{
+  max-width:100%;
+  overflow-x:hidden
+}
 
 body{
   font-family:Arial,Helvetica,sans-serif;
@@ -22,7 +32,9 @@ body{
   padding:18px
 }
 
-h1{margin:0 0 6px}
+h1{
+  margin:0 0 6px
+}
 
 .bar{
   display:grid;
@@ -47,7 +59,8 @@ h1{margin:0 0 6px}
   justify-self:end
 }
 
-button,label{
+button,
+label{
   background:#b40000;
   color:white;
   padding:10px 14px;
@@ -57,9 +70,13 @@ button,label{
   cursor:pointer
 }
 
-button{background:#26364b}
+button{
+  background:#26364b
+}
 
-input[type=file]{display:none}
+input[type=file]{
+  display:none
+}
 
 .setup{
   background:#fff4d6;
@@ -68,17 +85,21 @@ input[type=file]{display:none}
   display:none
 }
 
-.setup.show{display:block}
+.setup.show{
+  display:block
+}
 
-.setup div{
+.setup-row{
   display:grid;
   grid-template-columns:2fr 1fr 2fr;
   gap:8px;
-  margin:6px 0
+  margin:6px 0;
+  align-items:center
 }
 
 .setup input{
-  padding:7px
+  padding:7px;
+  min-width:0
 }
 
 .table-scroll{
@@ -96,7 +117,8 @@ table{
   background:white
 }
 
-th,td{
+th,
+td{
   border:1px solid #ddd;
   padding:9px;
   text-align:center;
@@ -117,7 +139,13 @@ tbody td:first-child{
   background:#b40000;
   color:white;
   text-align:left;
-  font-weight:bold
+  font-weight:bold;
+  min-width:260px
+}
+
+tbody td:nth-child(2){
+  text-align:left;
+  min-width:160px
 }
 
 tfoot td{
@@ -136,11 +164,13 @@ tfoot td{
   border-radius:50%;
   margin:auto;
   position:relative;
+
   background:
     conic-gradient(
-      #16708f calc(var(--p)*1%),
+      #16708f calc(var(--p) * 1%),
       white 0
     );
+
   border:1px solid #ddd
 }
 
@@ -196,7 +226,7 @@ tfoot td{
     gap:8px
   }
 
-  .bar>label{
+  .bar > label{
     grid-area:import;
     justify-self:start
   }
@@ -222,14 +252,16 @@ tfoot td{
     overflow-x:auto
   }
 
-  .setup div{
+  .setup-row{
+    min-width:520px;
     grid-template-columns:
       minmax(190px,2fr)
       120px
       minmax(150px,2fr)
   }
 
-  th,td{
+  th,
+  td{
     padding:8px 7px;
     font-size:12px
   }
@@ -255,6 +287,7 @@ tfoot td{
 
   <label>
     Import CSV Files
+
     <input
       id="files"
       type="file"
@@ -318,11 +351,13 @@ tfoot td{
   </th>
 
   <th rowspan="2">
-    Total<br>Delivered
+    Total<br>
+    Delivered
   </th>
 
   <th rowspan="2">
-    Email<br>Success (%)
+    Email<br>
+    Success (%)
   </th>
 
 </tr>
@@ -330,27 +365,33 @@ tfoot td{
 <tr>
 
   <th>
-    Database<br>DNA (C)
+    Database<br>
+    DNA (C)
   </th>
 
   <th>
-    Delivery<br>Attempt (D)
+    Delivery<br>
+    Attempt (D)
   </th>
 
   <th>
-    Failed<br>(C - D)
+    Failed<br>
+    (C - D)
   </th>
 
   <th>
-    Hard<br>Bounce
+    Hard<br>
+    Bounce
   </th>
 
   <th>
-    Soft<br>Bounce
+    Soft<br>
+    Bounce
   </th>
 
   <th>
-    Invalid<br>Email
+    Invalid<br>
+    Email
   </th>
 
   <th>
@@ -370,6 +411,7 @@ tfoot td{
 </thead>
 
 <tbody id="body"></tbody>
+
 <tfoot id="foot"></tfoot>
 
 </table>
@@ -378,18 +420,17 @@ tfoot td{
 
 <div class="note">
   Note: Delivery Attempt includes all email records processed by the
-  delivery system, including records with "Delivery failed";
-  Hard Bounce and Soft Bounce are counted by source-report rows;
-  Open and Click remain unique-customer metrics.
+  delivery system, including records with "Delivery failed".
+  Hard Bounce and Soft Bounce are counted from every data row in their
+  respective source reports. Open and Click are unique-customer metrics.
 </div>
 
 </div>
-
 
 <script>
 
 /* ==========================================================
-   GLOBAL DATA
+   GLOBAL
 ========================================================== */
 
 let M = {};
@@ -406,37 +447,42 @@ const ne =
 
 
 /* ==========================================================
-   NUMBER FORMAT
+   FORMAT
 ========================================================== */
 
 const num =
-  n =>
-    Number(n || 0)
+  value =>
+    Number(value || 0)
       .toLocaleString("en-US");
 
 
-const pc =
-  (n,d) => {
+const pct =
+  (value,base) => {
 
-    if(!d){
+    if(!base){
       return "(n%)";
     }
 
-    return `(${(n/d*100).toFixed(2)}%)`;
+    return `(${(
+      value /
+      base *
+      100
+    ).toFixed(2)}%)`;
+
   };
 
 
 const metric =
-  (n,p) => `
+  (value,percentage) => `
 
     <div class="metric">
 
       <b>
-        ${num(n)}
+        ${num(value)}
       </b>
 
       <small>
-        ${p}
+        ${percentage}
       </small>
 
     </div>
@@ -448,12 +494,14 @@ const metric =
    CSV PARSER
 ========================================================== */
 
-function parse(text){
+function parseCSV(text){
 
-  let rows = [];
+  const rows = [];
+
   let row = [];
   let field = "";
   let quoted = false;
+
 
   for(
     let i=0;
@@ -485,15 +533,14 @@ function parse(text){
 
       }
 
-
     }else if(
       char === "," &&
       !quoted
     ){
 
       row.push(field);
-      field = "";
 
+      field = "";
 
     }else if(
       (
@@ -511,14 +558,20 @@ function parse(text){
       }
 
       row.push(field);
+
       field = "";
 
-      if(row.some(ne)){
+
+      if(
+        row.some(ne)
+      ){
+
         rows.push(row);
+
       }
 
-      row = [];
 
+      row = [];
 
     }else{
 
@@ -536,8 +589,13 @@ function parse(text){
 
     row.push(field);
 
-    if(row.some(ne)){
+
+    if(
+      row.some(ne)
+    ){
+
       rows.push(row);
+
     }
 
   }
@@ -548,18 +606,21 @@ function parse(text){
 
 
 /* ==========================================================
-   CAMPAIGN ID
+   CAMPAIGN ID FROM ALT_CUSTOMER_ID
 ========================================================== */
 
-function camp(id){
+function campaignFromCustomerID(id){
 
   const value =
-    (id || "").trim();
+    String(id || "")
+      .trim();
+
 
   const match =
     value.match(
       /^(.*)-(\d{6})$/
     );
+
 
   return match
     ? match[1]
@@ -568,13 +629,92 @@ function camp(id){
 
 
 /* ==========================================================
+   CAMPAIGN ID FROM FILE NAME
+========================================================== */
+
+function campaignFromFilename(filename){
+
+  let name =
+    String(filename || "")
+      .replace(
+        /\.csv$/i,
+        ""
+      )
+      .trim();
+
+
+  /*
+    Examples:
+
+    ... Open Report1
+    ... Open Report 2
+    ... Permanent Bounce Back
+    ... Temporary Bounce Back
+    ... SPAM
+    ... Summary
+  */
+
+  name =
+    name.replace(
+      /\s+open\s*report\s*\d*\s*$/i,
+      ""
+    );
+
+
+  name =
+    name.replace(
+      /\s+permanent\s+bounce\s+back\s*$/i,
+      ""
+    );
+
+
+  name =
+    name.replace(
+      /\s+temporary\s+bounce\s+back\s*$/i,
+      ""
+    );
+
+
+  name =
+    name.replace(
+      /\s+hard\s+bounce.*$/i,
+      ""
+    );
+
+
+  name =
+    name.replace(
+      /\s+soft\s+bounce.*$/i,
+      ""
+    );
+
+
+  name =
+    name.replace(
+      /\s+spam\s*$/i,
+      ""
+    );
+
+
+  name =
+    name.replace(
+      /\s+summary\s*$/i,
+      ""
+    );
+
+
+  return name.trim();
+}
+
+
+/* ==========================================================
    FILE TYPE
 ========================================================== */
 
-function typ(filename){
+function getFileType(filename){
 
   const name =
-    filename
+    String(filename || "")
       .toLowerCase()
       .replace(
         /[\s_\-]+/g,
@@ -591,6 +731,7 @@ function typ(filename){
   ){
 
     return "hard";
+
   }
 
 
@@ -603,6 +744,7 @@ function typ(filename){
   ){
 
     return "soft";
+
   }
 
 
@@ -611,6 +753,7 @@ function typ(filename){
   ){
 
     return "spam";
+
   }
 
 
@@ -620,6 +763,7 @@ function typ(filename){
   ){
 
     return "open";
+
   }
 
 
@@ -628,57 +772,90 @@ function typ(filename){
 
 
 /* ==========================================================
-   GET CAMPAIGN
+   CAMPAIGN OBJECT
 ========================================================== */
 
-function getCampaign(campaign){
+function getCampaign(campaignID){
 
-  if(!M[campaign]){
+  if(
+    !M[campaignID]
+  ){
 
-    M[campaign] = {
+    M[campaignID] = {
 
-      cust:
+      /*
+        Open Report data:
+        unique by ALT_CUSTOMER_ID.
+      */
+
+      customers:
         new Map(),
 
-      hard:
+
+      /*
+        Sets are ONLY used to identify
+        whether a customer bounced when
+        exporting delivered email list.
+      */
+
+      hardIDs:
         new Set(),
 
-      soft:
+      softIDs:
         new Set(),
 
-      spam:
+      spamIDs:
         new Set(),
+
+
+      /*
+        KPI counters.
+
+        IMPORTANT:
+        Every data row is counted.
+        NO deduplication.
+      */
 
       hardCount:
         0,
 
       softCount:
+        0,
+
+      spamCount:
         0
 
     };
 
   }
 
-  return M[campaign];
+
+  return M[campaignID];
 }
 
 
 /* ==========================================================
-   IMPORT FILES
+   IMPORT
 ========================================================== */
 
-async function load(files){
+async function importFiles(files){
 
   M = {};
 
 
-  const diag = {
+  const diagnostic = {
+
+    openFiles:0,
+    hardFiles:0,
+    softFiles:0,
+    spamFiles:0,
 
     openRows:0,
     hardRows:0,
     softRows:0,
     spamRows:0,
-    unknown:0
+
+    unknownFiles:0
 
   };
 
@@ -688,9 +865,9 @@ async function load(files){
 
 
   const normalizeHeader =
-    header =>
+    value =>
 
-      String(header || "")
+      String(value || "")
 
         .replace(
           /^\uFEFF/,
@@ -712,17 +889,21 @@ async function load(files){
     of files
   ){
 
-    const type =
-      typ(file.name);
+    const fileType =
+      getFileType(
+        file.name
+      );
 
 
     if(
-      type === "unknown"
+      fileType ===
+      "unknown"
     ){
 
-      diag.unknown++;
+      diagnostic.unknownFiles++;
 
       continue;
+
     }
 
 
@@ -731,13 +912,15 @@ async function load(files){
 
 
     const rows =
-      parse(text);
+      parseCSV(text);
 
 
     if(
       rows.length < 2
     ){
+
       continue;
+
     }
 
 
@@ -749,104 +932,162 @@ async function load(files){
 
     const customerIndex =
       headers.findIndex(
-        h =>
-          h === "ALT_CUSTOMER_ID" ||
-          h === "ALTCUSTOMERID"
+        header =>
+          header ===
+            "ALT_CUSTOMER_ID" ||
+          header ===
+            "ALTCUSTOMERID"
       );
 
 
     const sentIndex =
       headers.findIndex(
-        h =>
-          h === "SENT_DATE" ||
-          h === "SENTDATE"
+        header =>
+          header ===
+            "SENT_DATE" ||
+          header ===
+            "SENTDATE"
       );
 
 
     const openIndex =
       headers.findIndex(
-        h =>
-          h === "OPEN_DATE" ||
-          h === "OPENDATE"
+        header =>
+          header ===
+            "OPEN_DATE" ||
+          header ===
+            "OPENDATE"
       );
 
 
+    /*
+      Campaign ID is first attempted
+      from filename.
+
+      This is especially important for
+      Bounce files because the whole
+      source file belongs to one campaign.
+    */
+
+    const fileCampaign =
+      campaignFromFilename(
+        file.name
+      );
+
+
+    /* ======================================================
+       OPEN REPORT
+    ====================================================== */
+
     if(
-      customerIndex < 0
+      fileType ===
+      "open"
     ){
 
-      diag.unknown++;
-
-      continue;
-    }
+      diagnostic.openFiles++;
 
 
-    for(
-      const row
-      of rows.slice(1)
-    ){
+      if(
+        customerIndex < 0
+      ){
 
-      const customerID =
-        (row[customerIndex] || "")
-          .trim();
+        diagnostic.unknownFiles++;
 
-
-      if(!customerID){
         continue;
+
       }
 
 
-      const campaign =
-        camp(customerID);
-
-
-      const data =
-        getCampaign(campaign);
-
-
-      /* ====================================================
-         OPEN REPORT
-      ==================================================== */
-
-      if(
-        type === "open"
+      for(
+        let rowIndex=1;
+        rowIndex<rows.length;
+        rowIndex++
       ){
 
-        diag.openRows++;
+        const row =
+          rows[rowIndex];
+
+
+        const customerID =
+          String(
+            row[
+              customerIndex
+            ] || ""
+          ).trim();
+
+
+        if(
+          !customerID
+        ){
+
+          continue;
+
+        }
+
+
+        diagnostic.openRows++;
+
+
+        /*
+          Prefer Campaign ID from
+          ALT_CUSTOMER_ID for Open Report.
+        */
+
+        const campaignID =
+
+          campaignFromCustomerID(
+            customerID
+          ) ||
+
+          fileCampaign;
+
+
+        const campaign =
+          getCampaign(
+            campaignID
+          );
 
 
         const sent =
           sentIndex >= 0
-            ? (row[sentIndex] || "").trim()
+            ? String(
+                row[
+                  sentIndex
+                ] || ""
+              ).trim()
             : "";
 
 
         const open =
           openIndex >= 0
-            ? (row[openIndex] || "").trim()
+            ? String(
+                row[
+                  openIndex
+                ] || ""
+              ).trim()
             : "";
 
 
-        const sentLower =
-          sent.toLowerCase();
-
-
         let customer =
-          data.cust.get(
+          campaign.customers.get(
             customerID
           ) || {
 
-            att:0,
-            ef:0,
-            op:0,
-            cl:0,
+            attempt:0,
+
+            invalidEmail:0,
+
+            open:0,
+
+            click:0,
+
             email:""
 
           };
 
 
         /*
-          Column B = Email
+          Column B = email address.
         */
 
         if(
@@ -855,8 +1096,9 @@ async function load(files){
         ){
 
           customer.email =
-            (row[1] || "")
-              .trim();
+            String(
+              row[1] || ""
+            ).trim();
 
         }
 
@@ -864,16 +1106,15 @@ async function load(files){
         /*
           DELIVERY ATTEMPT
 
-          Timestamp and
-          Delivery failed
-          both count.
+          Any non-empty SENT_DATE counts,
+          including Delivery failed.
         */
 
         if(
           ne(sent)
         ){
 
-          customer.att = 1;
+          customer.attempt = 1;
 
         }
 
@@ -883,11 +1124,12 @@ async function load(files){
         */
 
         if(
-          sentLower ===
+          sent
+            .toLowerCase() ===
           "delivery failed"
         ){
 
-          customer.ef = 1;
+          customer.invalidEmail = 1;
 
         }
 
@@ -900,7 +1142,7 @@ async function load(files){
           ne(open)
         ){
 
-          customer.op = 1;
+          customer.open = 1;
 
         }
 
@@ -909,7 +1151,7 @@ async function load(files){
           UNIQUE CLICK
 
           A-D fixed.
-          E onward = link timestamps.
+          E onward dynamic link columns.
         */
 
         for(
@@ -919,10 +1161,12 @@ async function load(files){
         ){
 
           if(
-            ne(row[column])
+            ne(
+              row[column]
+            )
           ){
 
-            customer.cl = 1;
+            customer.click = 1;
 
             break;
 
@@ -931,79 +1175,257 @@ async function load(files){
         }
 
 
-        data.cust.set(
+        campaign.customers.set(
           customerID,
           customer
         );
 
+      }
 
-      /* ====================================================
-         HARD BOUNCE
-      ==================================================== */
-
-      }else if(
-        type === "hard"
-      ){
-
-        diag.hardRows++;
-
-        /*
-          Count every source row.
-        */
-
-        data.hardCount++;
+    }
 
 
-        /*
-          Set is retained for
-          delivered-email exclusion.
-        */
+    /* ======================================================
+       HARD BOUNCE
+    ====================================================== */
 
-        data.hard.add(
-          customerID
+    else if(
+      fileType ===
+      "hard"
+    ){
+
+      diagnostic.hardFiles++;
+
+
+      /*
+        Entire source report belongs to
+        fileCampaign.
+
+        Every populated source row counts
+        toward Hard Bounce KPI.
+      */
+
+      const campaign =
+        getCampaign(
+          fileCampaign
         );
 
 
-      /* ====================================================
-         SOFT BOUNCE
-      ==================================================== */
-
-      }else if(
-        type === "soft"
+      for(
+        let rowIndex=1;
+        rowIndex<rows.length;
+        rowIndex++
       ){
 
-        diag.softRows++;
-
-        /*
-          Count every source row.
-        */
-
-        data.softCount++;
+        const row =
+          rows[rowIndex];
 
 
         /*
-          Set retained for
-          delivered-email exclusion.
+          Ignore completely blank CSV rows.
         */
 
-        data.soft.add(
-          customerID
+        if(
+          !row.some(ne)
+        ){
+
+          continue;
+
+        }
+
+
+        diagnostic.hardRows++;
+
+
+        /*
+          THIS IS THE KPI COUNT.
+          No Set.size.
+          No deduplication.
+        */
+
+        campaign.hardCount++;
+
+
+        /*
+          Keep ALT ID Set only for
+          delivered email exclusion.
+        */
+
+        if(
+          customerIndex >= 0
+        ){
+
+          const customerID =
+            String(
+              row[
+                customerIndex
+              ] || ""
+            ).trim();
+
+
+          if(
+            customerID
+          ){
+
+            campaign.hardIDs.add(
+              customerID
+            );
+
+          }
+
+        }
+
+      }
+
+    }
+
+
+    /* ======================================================
+       SOFT BOUNCE
+    ====================================================== */
+
+    else if(
+      fileType ===
+      "soft"
+    ){
+
+      diagnostic.softFiles++;
+
+
+      const campaign =
+        getCampaign(
+          fileCampaign
         );
 
 
-      /* ====================================================
-         SPAM
-      ==================================================== */
-
-      }else if(
-        type === "spam"
+      for(
+        let rowIndex=1;
+        rowIndex<rows.length;
+        rowIndex++
       ){
 
-        diag.spamRows++;
+        const row =
+          rows[rowIndex];
 
-        data.spam.add(
-          customerID
+
+        if(
+          !row.some(ne)
+        ){
+
+          continue;
+
+        }
+
+
+        diagnostic.softRows++;
+
+
+        /*
+          KPI:
+          count every source-report row.
+        */
+
+        campaign.softCount++;
+
+
+        /*
+          Set only for email exclusion.
+        */
+
+        if(
+          customerIndex >= 0
+        ){
+
+          const customerID =
+            String(
+              row[
+                customerIndex
+              ] || ""
+            ).trim();
+
+
+          if(
+            customerID
+          ){
+
+            campaign.softIDs.add(
+              customerID
+            );
+
+          }
+
+        }
+
+      }
+
+    }
+
+
+    /* ======================================================
+       SPAM
+    ====================================================== */
+
+    else if(
+      fileType ===
+      "spam"
+    ){
+
+      diagnostic.spamFiles++;
+
+
+      const campaign =
+        getCampaign(
+          fileCampaign
         );
+
+
+      for(
+        let rowIndex=1;
+        rowIndex<rows.length;
+        rowIndex++
+      ){
+
+        const row =
+          rows[rowIndex];
+
+
+        if(
+          !row.some(ne)
+        ){
+
+          continue;
+
+        }
+
+
+        diagnostic.spamRows++;
+
+        campaign.spamCount++;
+
+
+        if(
+          customerIndex >= 0
+        ){
+
+          const customerID =
+            String(
+              row[
+                customerIndex
+              ] || ""
+            ).trim();
+
+
+          if(
+            customerID
+          ){
+
+            campaign.spamIDs.add(
+              customerID
+            );
+
+          }
+
+        }
 
       }
 
@@ -1012,7 +1434,7 @@ async function load(files){
   }
 
 
-  setup();
+  buildSetup();
 
   render();
 
@@ -1023,17 +1445,25 @@ async function load(files){
 
     `${Object.keys(M).length} campaign(s) processed. ` +
 
-    `Open ${num(diag.openRows)} rows | ` +
+    `Open ${num(
+      diagnostic.openRows
+    )} rows | ` +
 
-    `Hard ${num(diag.hardRows)} rows | ` +
+    `Hard ${num(
+      diagnostic.hardRows
+    )} rows | ` +
 
-    `Soft ${num(diag.softRows)} rows | ` +
+    `Soft ${num(
+      diagnostic.softRows
+    )} rows | ` +
 
-    `SPAM ${num(diag.spamRows)} rows` +
+    `SPAM ${num(
+      diagnostic.spamRows
+    )} rows` +
 
     (
-      diag.unknown
-        ? ` | ${diag.unknown} unrecognized file(s)`
+      diagnostic.unknownFiles
+        ? ` | ${diagnostic.unknownFiles} unrecognized file(s)`
         : ""
     );
 
@@ -1042,107 +1472,114 @@ async function load(files){
 
 /* ==========================================================
    CAMPAIGN SETUP
+
+   DEFAULT DNA = DELIVERY ATTEMPT
 ========================================================== */
 
-function setup(){
+function buildSetup(){
 
   const campaigns =
-    Object.keys(M).sort();
+    Object.keys(M)
+      .sort();
 
 
-  const setupBox =
+  const box =
     q("#setup");
 
 
-  setupBox.className =
+  box.className =
     campaigns.length
       ? "setup show"
       : "setup";
 
 
-  setupBox.innerHTML =
+  box.innerHTML =
 
-    "<b>Campaign setup</b>" +
+    campaigns.length
+      ? `
 
-    campaigns.map(
-      campaign => {
+        <b>
+          Campaign setup
+        </b>
 
-
-        /*
-          DEFAULT DATABASE DNA
-          =
-          DELIVERY ATTEMPT
-        */
-
-        let defaultDNA = 0;
+        ${campaigns.map(
+          campaignID => {
 
 
-        for(
-          const customer
-          of M[campaign].cust.values()
-        ){
-
-          defaultDNA +=
-            customer.att || 0;
-
-        }
+            let deliveryAttempt =
+              0;
 
 
-        if(
-          !META[campaign]
-        ){
+            for(
+              const customer
+              of M[
+                campaignID
+              ].customers.values()
+            ){
 
-          META[campaign] = {
+              deliveryAttempt +=
+                customer.attempt || 0;
 
-            dna:
-              defaultDNA,
-
-            criteria:
-              "put criteria here"
-
-          };
+            }
 
 
-        }else if(
-          META[campaign].dna === "" ||
-          META[campaign].dna == null
-        ){
+            /*
+              Default DNA =
+              Delivery Attempt.
+            */
 
-          META[campaign].dna =
-            defaultDNA;
+            if(
+              !META[
+                campaignID
+              ]
+            ){
 
-        }
+              META[
+                campaignID
+              ] = {
+
+                dna:
+                  deliveryAttempt,
+
+                criteria:
+                  "put criteria here"
+
+              };
+
+            }
 
 
-        return `
+            return `
 
-          <div>
+              <div class="setup-row">
 
-            <span>
-              ${campaign}
-            </span>
+                <span>
+                  ${campaignID}
+                </span>
 
-            <input
-              class="dna"
-              data-c="${campaign}"
-              value="${META[campaign].dna}"
-              placeholder="Database DNA"
-            >
+                <input
+                  class="dna"
+                  data-c="${campaignID}"
+                  value="${META[campaignID].dna}"
+                  placeholder="Database DNA"
+                >
 
-            <input
-              class="crit"
-              data-c="${campaign}"
-              value="${META[campaign].criteria}"
-              placeholder="put criteria here"
-            >
+                <input
+                  class="criteria-input"
+                  data-c="${campaignID}"
+                  value="${META[campaignID].criteria}"
+                  placeholder="put criteria here"
+                >
 
-          </div>
+              </div>
 
-        `;
+            `;
 
-      }
+          }
+        ).join("")}
 
-    ).join("");
+      `
+      : "";
 
 }
 
@@ -1151,90 +1588,105 @@ function setup(){
    CALCULATION
 ========================================================== */
 
-function calc(campaign){
+function calc(campaignID){
 
-  const data =
-    M[campaign];
+  const campaign =
+    M[campaignID];
 
 
-  let attempt = 0;
+  let deliveryAttempt =
+    0;
 
-  let invalidEmail = 0;
 
-  let uniqueOpen = 0;
+  let invalidEmail =
+    0;
 
-  let uniqueClick = 0;
+
+  let uniqueOpen =
+    0;
+
+
+  let uniqueClick =
+    0;
 
 
   for(
     const customer
-    of data.cust.values()
+    of campaign.customers.values()
   ){
 
-    attempt +=
-      customer.att;
+    deliveryAttempt +=
+      customer.attempt || 0;
+
 
     invalidEmail +=
-      customer.ef;
+      customer.invalidEmail || 0;
+
 
     uniqueOpen +=
-      customer.op;
+      customer.open || 0;
+
 
     uniqueClick +=
-      customer.cl;
+      customer.click || 0;
 
   }
 
 
-  const dna =
+  const databaseDNA =
     Number(
-      META[campaign]?.dna || 0
+      META[
+        campaignID
+      ]?.dna || 0
     );
 
 
   /*
-    Bounce counts are
-    SOURCE REPORT ROW COUNTS.
+    IMPORTANT:
+
+    HARD / SOFT = ROW COUNTS.
+
+    Never use Set.size here.
   */
 
   const hardBounce =
-    data.hardCount || 0;
+    Number(
+      campaign.hardCount || 0
+    );
 
 
   const softBounce =
-    data.softCount || 0;
+    Number(
+      campaign.softCount || 0
+    );
 
 
   /*
-    FAILED = C - D
+    FAILED C-D
   */
 
   const failed =
 
-    dna
+    databaseDNA
       ? Math.max(
           0,
-          dna - attempt
+          databaseDNA -
+          deliveryAttempt
         )
       : 0;
 
 
   /*
     TOTAL DELIVERED
-
-    Delivery Attempt
-    - Hard Bounce
-    - Soft Bounce
-    - Invalid Email
   */
 
-  const delivered =
+  const totalDelivered =
 
     Math.max(
 
       0,
 
-      attempt
+      deliveryAttempt
       - hardBounce
       - softBounce
       - invalidEmail
@@ -1254,50 +1706,49 @@ function calc(campaign){
     + invalidEmail;
 
 
-  /*
-    EMAIL SUCCESS
-  */
+  const emailSuccess =
 
-  const success =
-
-    dna
-      ? delivered / dna
+    databaseDNA
+      ? totalDelivered /
+        databaseDNA
       : 0;
 
 
   return {
 
-    dna,
+    dna:
+      databaseDNA,
 
-    att:
-      attempt,
+    attempt:
+      deliveryAttempt,
 
-    fail:
-      failed,
+    failed,
 
-    h:
+    hard:
       hardBounce,
 
-    s:
+    soft:
       softBounce,
 
-    ef:
+    invalid:
       invalidEmail,
 
-    tf:
-      totalFailed,
+    totalFailed,
 
-    op:
+    open:
       uniqueOpen,
 
-    cl:
+    click:
       uniqueClick,
 
-    del:
-      delivered,
+    delivered:
+      totalDelivered,
 
-    suc:
-      success
+    success:
+      emailSuccess,
+
+    spam:
+      campaign.spamCount || 0
 
   };
 
@@ -1311,7 +1762,8 @@ function calc(campaign){
 function render(){
 
   const campaigns =
-    Object.keys(M).sort();
+    Object.keys(M)
+      .sort();
 
 
   const body =
@@ -1327,50 +1779,62 @@ function render(){
   foot.innerHTML = "";
 
 
-  const total = {
+  const grand = {
 
     dna:0,
-
-    att:0,
-
-    fail:0,
-
-    h:0,
-
-    s:0,
-
-    ef:0,
-
-    tf:0,
-
-    op:0,
-
-    cl:0,
-
-    del:0
+    attempt:0,
+    failed:0,
+    hard:0,
+    soft:0,
+    invalid:0,
+    totalFailed:0,
+    open:0,
+    click:0,
+    delivered:0
 
   };
 
 
   for(
-    const campaign
+    const campaignID
     of campaigns
   ){
 
-    const x =
-      calc(campaign);
-
-
-    Object
-      .keys(total)
-      .forEach(
-        key => {
-
-          total[key] +=
-            x[key];
-
-        }
+    const data =
+      calc(
+        campaignID
       );
+
+
+    grand.dna +=
+      data.dna;
+
+    grand.attempt +=
+      data.attempt;
+
+    grand.failed +=
+      data.failed;
+
+    grand.hard +=
+      data.hard;
+
+    grand.soft +=
+      data.soft;
+
+    grand.invalid +=
+      data.invalid;
+
+    grand.totalFailed +=
+      data.totalFailed;
+
+    grand.open +=
+      data.open;
+
+    grand.click +=
+      data.click;
+
+    grand.delivered +=
+      data.delivered;
 
 
     body.innerHTML += `
@@ -1378,113 +1842,101 @@ function render(){
       <tr>
 
         <td>
-          ${campaign}
+          ${campaignID}
         </td>
 
         <td>
-          ${META[campaign]?.criteria || "put criteria here"}
+          ${META[campaignID]?.criteria || "put criteria here"}
         </td>
 
         <td>
-          ${num(x.dna)}
+          ${num(data.dna)}
         </td>
 
         <td>
-
           ${metric(
-            x.att,
-            pc(
-              x.att,
-              x.dna
+            data.attempt,
+            pct(
+              data.attempt,
+              data.dna
             )
           )}
-
         </td>
 
         <td>
-
           ${metric(
-            x.fail,
-            pc(
-              x.fail,
-              x.dna
+            data.failed,
+            pct(
+              data.failed,
+              data.dna
             )
           )}
-
         </td>
 
         <td>
-
           ${metric(
-            x.h,
-            pc(
-              x.h,
-              x.att
+            data.hard,
+            pct(
+              data.hard,
+              data.attempt
             )
           )}
-
         </td>
 
         <td>
-
           ${metric(
-            x.s,
-            pc(
-              x.s,
-              x.att
+            data.soft,
+            pct(
+              data.soft,
+              data.attempt
             )
           )}
-
         </td>
 
         <td>
-
           ${metric(
-            x.ef,
-            pc(
-              x.ef,
-              x.dna
+            data.invalid,
+            pct(
+              data.invalid,
+              data.dna
             )
           )}
-
         </td>
 
         <td>
-
           <b>
-            ${num(x.tf)}
+            ${num(
+              data.totalFailed
+            )}
           </b>
-
         </td>
 
         <td>
-
           ${metric(
-            x.op,
-            pc(
-              x.op,
-              x.del
+            data.open,
+            pct(
+              data.open,
+              data.delivered
             )
           )}
-
         </td>
 
         <td>
-
           ${metric(
-            x.cl,
-            pc(
-              x.cl,
-              x.del
+            data.click,
+            pct(
+              data.click,
+              data.delivered
             )
           )}
-
         </td>
 
         <td>
 
           <b>
-            ${num(x.del)}
+            ${num(
+              data.delivered
+            )}
           </b>
 
           <br>
@@ -1492,7 +1944,7 @@ function render(){
           <a
             href="#"
             class="row-export"
-            data-c="${campaign}"
+            data-c="${campaignID}"
           >
             Export data
           </a>
@@ -1503,11 +1955,11 @@ function render(){
 
           <div
             class="donut"
-            style="--p:${x.suc*100}"
+            style="--p:${data.success*100}"
           >
 
             <span>
-              ${(x.suc*100).toFixed(0)}%
+              ${(data.success*100).toFixed(0)}%
             </span>
 
           </div>
@@ -1527,8 +1979,9 @@ function render(){
 
     const success =
 
-      total.dna
-        ? total.del / total.dna
+      grand.dna
+        ? grand.delivered /
+          grand.dna
         : 0;
 
 
@@ -1541,43 +1994,47 @@ function render(){
         </td>
 
         <td>
-          ${num(total.dna)}
+          ${num(grand.dna)}
         </td>
 
         <td>
-          ${num(total.att)}
+          ${num(grand.attempt)}
         </td>
 
         <td>
-          ${num(total.fail)}
+          ${num(grand.failed)}
         </td>
 
         <td>
-          ${num(total.h)}
+          ${num(grand.hard)}
         </td>
 
         <td>
-          ${num(total.s)}
+          ${num(grand.soft)}
         </td>
 
         <td>
-          ${num(total.ef)}
+          ${num(grand.invalid)}
         </td>
 
         <td>
-          ${num(total.tf)}
+          ${num(
+            grand.totalFailed
+          )}
         </td>
 
         <td>
-          ${num(total.op)}
+          ${num(grand.open)}
         </td>
 
         <td>
-          ${num(total.cl)}
+          ${num(grand.click)}
         </td>
 
         <td>
-          ${num(total.del)}
+          ${num(
+            grand.delivered
+          )}
         </td>
 
         <td>
@@ -1608,12 +2065,17 @@ q("#apply").onclick =
       .forEach(
         input => {
 
-          META[
-            input.dataset.c
-          ] ??= {};
+          const campaignID =
+            input.dataset.c;
+
 
           META[
-            input.dataset.c
+            campaignID
+          ] ??= {};
+
+
+          META[
+            campaignID
           ].dna =
             input.value;
 
@@ -1623,17 +2085,22 @@ q("#apply").onclick =
 
     document
       .querySelectorAll(
-        ".crit"
+        ".criteria-input"
       )
       .forEach(
         input => {
 
-          META[
-            input.dataset.c
-          ] ??= {};
+          const campaignID =
+            input.dataset.c;
+
 
           META[
-            input.dataset.c
+            campaignID
+          ] ??= {};
+
+
+          META[
+            campaignID
           ].criteria =
 
             input.value ||
@@ -1649,13 +2116,13 @@ q("#apply").onclick =
 
 
 /* ==========================================================
-   IMPORT EVENT
+   FILE IMPORT
 ========================================================== */
 
 q("#files").onchange =
   event => {
 
-    load(
+    importFiles(
       [
         ...event.target.files
       ]
@@ -1670,32 +2137,31 @@ q("#files").onchange =
 
 function csvCell(value){
 
-  const string =
+  const text =
     String(
       value ?? ""
     );
 
-  return `"${string.replace(
+
+  return `"${text.replace(
     /"/g,
     '""'
   )}"`;
+
 }
 
 
 function createCSV(rows){
 
   return rows
-
     .map(
       row =>
-
         row
           .map(csvCell)
           .join(",")
-
     )
-
     .join("\r\n");
+
 }
 
 
@@ -1744,6 +2210,7 @@ function downloadCSV(
 
   anchor.click();
 
+
   anchor.remove();
 
 
@@ -1755,13 +2222,14 @@ function downloadCSV(
 
 
 /* ==========================================================
-   EXPORT SUMMARY ALL CAMPAIGNS
+   EXPORT SUMMARY
 ========================================================== */
 
-function exportCSV(){
+function exportSummary(){
 
   const campaigns =
-    Object.keys(M).sort();
+    Object.keys(M)
+      .sort();
 
 
   if(
@@ -1773,6 +2241,7 @@ function exportCSV(){
     );
 
     return;
+
   }
 
 
@@ -1823,223 +2292,115 @@ function exportCSV(){
   ]];
 
 
-  const total = {
-
-    dna:0,
-
-    att:0,
-
-    fail:0,
-
-    h:0,
-
-    s:0,
-
-    ef:0,
-
-    tf:0,
-
-    op:0,
-
-    cl:0,
-
-    del:0,
-
-    spam:0
-
-  };
-
-
   for(
-    const campaign
+    const campaignID
     of campaigns
   ){
 
-    const x =
-      calc(campaign);
-
-
-    total.dna +=
-      x.dna;
-
-    total.att +=
-      x.att;
-
-    total.fail +=
-      x.fail;
-
-    total.h +=
-      x.h;
-
-    total.s +=
-      x.s;
-
-    total.ef +=
-      x.ef;
-
-    total.tf +=
-      x.tf;
-
-    total.op +=
-      x.op;
-
-    total.cl +=
-      x.cl;
-
-    total.del +=
-      x.del;
-
-    total.spam +=
-      M[campaign]?.spam?.size || 0;
+    const data =
+      calc(
+        campaignID
+      );
 
 
     rows.push([
 
-      campaign,
+      campaignID,
 
-      META[campaign]?.criteria ||
+      META[
+        campaignID
+      ]?.criteria ||
         "put criteria here",
 
-      x.dna,
+      data.dna,
 
-      x.att,
+      data.attempt,
 
-      x.dna
-        ? (x.att/x.dna*100)
-            .toFixed(2) + "%"
+      data.dna
+        ? (
+            data.attempt /
+            data.dna *
+            100
+          ).toFixed(2) + "%"
         : "0.00%",
 
-      x.fail,
+      data.failed,
 
-      x.dna
-        ? (x.fail/x.dna*100)
-            .toFixed(2) + "%"
+      data.dna
+        ? (
+            data.failed /
+            data.dna *
+            100
+          ).toFixed(2) + "%"
         : "0.00%",
 
-      x.h,
+      data.hard,
 
-      x.att
-        ? (x.h/x.att*100)
-            .toFixed(2) + "%"
+      data.attempt
+        ? (
+            data.hard /
+            data.attempt *
+            100
+          ).toFixed(2) + "%"
         : "0.00%",
 
-      x.s,
+      data.soft,
 
-      x.att
-        ? (x.s/x.att*100)
-            .toFixed(2) + "%"
+      data.attempt
+        ? (
+            data.soft /
+            data.attempt *
+            100
+          ).toFixed(2) + "%"
         : "0.00%",
 
-      x.ef,
+      data.invalid,
 
-      x.dna
-        ? (x.ef/x.dna*100)
-            .toFixed(2) + "%"
+      data.dna
+        ? (
+            data.invalid /
+            data.dna *
+            100
+          ).toFixed(2) + "%"
         : "0.00%",
 
-      x.tf,
+      data.totalFailed,
 
-      x.op,
+      data.open,
 
-      x.del
-        ? (x.op/x.del*100)
-            .toFixed(2) + "%"
+      data.delivered
+        ? (
+            data.open /
+            data.delivered *
+            100
+          ).toFixed(2) + "%"
         : "0.00%",
 
-      x.cl,
+      data.click,
 
-      x.del
-        ? (x.cl/x.del*100)
-            .toFixed(2) + "%"
+      data.delivered
+        ? (
+            data.click /
+            data.delivered *
+            100
+          ).toFixed(2) + "%"
         : "0.00%",
 
-      x.del,
+      data.delivered,
 
-      x.dna
-        ? (x.del/x.dna*100)
-            .toFixed(2) + "%"
+      data.dna
+        ? (
+            data.delivered /
+            data.dna *
+            100
+          ).toFixed(2) + "%"
         : "0.00%",
 
-      M[campaign]?.spam?.size || 0
+      data.spam
 
     ]);
 
   }
-
-
-  rows.push([
-
-    "Grand Total",
-
-    "",
-
-    total.dna,
-
-    total.att,
-
-    total.dna
-      ? (total.att/total.dna*100)
-          .toFixed(2) + "%"
-      : "0.00%",
-
-    total.fail,
-
-    total.dna
-      ? (total.fail/total.dna*100)
-          .toFixed(2) + "%"
-      : "0.00%",
-
-    total.h,
-
-    total.att
-      ? (total.h/total.att*100)
-          .toFixed(2) + "%"
-      : "0.00%",
-
-    total.s,
-
-    total.att
-      ? (total.s/total.att*100)
-          .toFixed(2) + "%"
-      : "0.00%",
-
-    total.ef,
-
-    total.dna
-      ? (total.ef/total.dna*100)
-          .toFixed(2) + "%"
-      : "0.00%",
-
-    total.tf,
-
-    total.op,
-
-    total.del
-      ? (total.op/total.del*100)
-          .toFixed(2) + "%"
-      : "0.00%",
-
-    total.cl,
-
-    total.del
-      ? (total.cl/total.del*100)
-          .toFixed(2) + "%"
-      : "0.00%",
-
-    total.del,
-
-    total.dna
-      ? (total.del/total.dna*100)
-          .toFixed(2) + "%"
-      : "0.00%",
-
-    total.spam
-
-  ]);
-
-
-  const csv =
-    createCSV(rows);
 
 
   const stamp =
@@ -2054,7 +2415,9 @@ function exportCSV(){
 
   downloadCSV(
 
-    csv,
+    createCSV(
+      rows
+    ),
 
     `Email_Blast_Summary_${stamp}.csv`
 
@@ -2064,59 +2427,61 @@ function exportCSV(){
 
 
 q("#export").onclick =
-  exportCSV;
+  exportSummary;
 
 
 /* ==========================================================
-   EXPORT DELIVERED EMAIL LIST PER CAMPAIGN
+   EXPORT DELIVERED EMAIL LIST
 ========================================================== */
 
-function exportCampaignCSV(
-  campaign
+function exportDeliveredEmails(
+  campaignID
 ){
 
+  const campaign =
+    M[campaignID];
+
+
   if(
-    !M[campaign]
+    !campaign
   ){
+
     return;
+
   }
-
-
-  const data =
-    M[campaign];
 
 
   const emails = [];
 
-
-  /*
-    DELIVERED EMAIL CRITERIA:
-
-    1. Delivery Attempt = yes
-    2. Not Delivery failed
-    3. Not in Permanent Bounce
-    4. Not in Temporary Bounce
-  */
 
   for(
     const [
       customerID,
       customer
     ]
-    of data.cust.entries()
+    of campaign.customers.entries()
   ){
+
+    /*
+      Delivered email:
+
+      - Delivery Attempt
+      - not Invalid Email
+      - not in Permanent Bounce
+      - not in Temporary Bounce
+    */
 
     const delivered =
 
-      customer.att === 1 &&
+      customer.attempt === 1 &&
 
-      customer.ef !== 1 &&
+      customer.invalidEmail !== 1 &&
 
-      !data.hard.has(
+      !campaign.hardIDs.has(
         customerID
       ) &&
 
-      !data.soft.has(
+      !campaign.softIDs.has(
         customerID
       );
 
@@ -2124,7 +2489,9 @@ function exportCampaignCSV(
     if(
       !delivered
     ){
+
       continue;
+
     }
 
 
@@ -2147,10 +2514,6 @@ function exportCampaignCSV(
   }
 
 
-  /*
-    Sort email list
-  */
-
   emails.sort(
     (a,b) =>
       a.localeCompare(b)
@@ -2165,18 +2528,16 @@ function exportCampaignCSV(
 
     ...emails.map(
       email =>
-        [email]
+        [
+          email
+        ]
     )
 
   ];
 
 
-  const csv =
-    createCSV(rows);
-
-
   const safeCampaign =
-    campaign.replace(
+    campaignID.replace(
       /[\\/:*?"<>|]/g,
       "_"
     );
@@ -2184,7 +2545,9 @@ function exportCampaignCSV(
 
   downloadCSV(
 
-    csv,
+    createCSV(
+      rows
+    ),
 
     `${safeCampaign}_Delivered_Email_List.csv`
 
@@ -2194,7 +2557,7 @@ function exportCampaignCSV(
 
 
 /* ==========================================================
-   EXPORT DATA LINK
+   EXPORT DATA PER ROW
 ========================================================== */
 
 document.addEventListener(
@@ -2211,14 +2574,16 @@ document.addEventListener(
     if(
       !link
     ){
+
       return;
+
     }
 
 
     event.preventDefault();
 
 
-    exportCampaignCSV(
+    exportDeliveredEmails(
       link.dataset.c
     );
 
