@@ -2,19 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta
-  name="viewport"
-  content="width=device-width,initial-scale=1,viewport-fit=cover"
->
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Email Blast Dashboard</title>
 
 <style>
-*{
-  box-sizing:border-box
-}
+*{box-sizing:border-box}
 
-html,
-body{
+html,body{
   max-width:100%;
   overflow-x:hidden
 }
@@ -164,13 +158,11 @@ tfoot td{
   border-radius:50%;
   margin:auto;
   position:relative;
-
   background:
     conic-gradient(
-      #16708f calc(var(--p) * 1%),
+      #16708f calc(var(--p)*1%),
       white 0
     );
-
   border:1px solid #ddd
 }
 
@@ -287,7 +279,6 @@ tfoot td{
 
   <label>
     Import CSV Files
-
     <input
       id="files"
       type="file"
@@ -314,10 +305,7 @@ tfoot td{
 
 </div>
 
-<div
-  id="setup"
-  class="setup"
-></div>
+<div id="setup" class="setup"></div>
 
 <div class="table-scroll">
 
@@ -327,10 +315,7 @@ tfoot td{
 
 <tr>
 
-  <th
-    class="cid"
-    rowspan="2"
-  >
+  <th class="cid" rowspan="2">
     CAMPAIGN ID
   </th>
 
@@ -351,13 +336,11 @@ tfoot td{
   </th>
 
   <th rowspan="2">
-    Total<br>
-    Delivered
+    Total<br>Delivered
   </th>
 
   <th rowspan="2">
-    Email<br>
-    Success (%)
+    Email<br>Success (%)
   </th>
 
 </tr>
@@ -365,33 +348,27 @@ tfoot td{
 <tr>
 
   <th>
-    Database<br>
-    DNA (C)
+    Database<br>DNA (C)
   </th>
 
   <th>
-    Delivery<br>
-    Attempt (D)
+    Delivery<br>Attempt (D)
   </th>
 
   <th>
-    Failed<br>
-    (C - D)
+    Failed<br>(C - D)
   </th>
 
   <th>
-    Hard<br>
-    Bounce
+    Hard<br>Bounce
   </th>
 
   <th>
-    Soft<br>
-    Bounce
+    Soft<br>Bounce
   </th>
 
   <th>
-    Invalid<br>
-    Email
+    Invalid<br>Email
   </th>
 
   <th>
@@ -411,7 +388,6 @@ tfoot td{
 </thead>
 
 <tbody id="body"></tbody>
-
 <tfoot id="foot"></tfoot>
 
 </table>
@@ -419,10 +395,9 @@ tfoot td{
 </div>
 
 <div class="note">
-  Note: Delivery Attempt includes all email records processed by the
-  delivery system, including records with "Delivery failed".
-  Hard Bounce and Soft Bounce are counted from every data row in their
-  respective source reports. Open and Click are unique-customer metrics.
+  Note: Delivery Attempt includes all email records processed by the delivery system,
+  including records with "Delivery failed". Hard Bounce and Soft Bounce are counted
+  from every data row in their respective source reports. Open and Click are unique-customer metrics.
 </div>
 
 </div>
@@ -436,58 +411,41 @@ tfoot td{
 let M = {};
 let META = {};
 
-const q =
-  selector =>
-    document.querySelector(selector);
+const q = selector =>
+  document.querySelector(selector);
 
-const ne =
-  value =>
-    value != null &&
-    String(value).trim() !== "";
+const ne = value =>
+  value != null &&
+  String(value).trim() !== "";
 
 
 /* ==========================================================
    FORMAT
 ========================================================== */
 
-const num =
-  value =>
-    Number(value || 0)
-      .toLocaleString("en-US");
+const num = value =>
+  Number(value || 0)
+    .toLocaleString("en-US");
 
+const pct = (value,base) => {
 
-const pct =
-  (value,base) => {
+  if(!base){
+    return "(n%)";
+  }
 
-    if(!base){
-      return "(n%)";
-    }
+  return `(${(
+    value /
+    base *
+    100
+  ).toFixed(2)}%)`;
+};
 
-    return `(${(
-      value /
-      base *
-      100
-    ).toFixed(2)}%)`;
-
-  };
-
-
-const metric =
-  (value,percentage) => `
-
-    <div class="metric">
-
-      <b>
-        ${num(value)}
-      </b>
-
-      <small>
-        ${percentage}
-      </small>
-
-    </div>
-
-  `;
+const metric = (value,percentage) => `
+  <div class="metric">
+    <b>${num(value)}</b>
+    <small>${percentage}</small>
+  </div>
+`;
 
 
 /* ==========================================================
@@ -502,19 +460,10 @@ function parseCSV(text){
   let field = "";
   let quoted = false;
 
+  for(let i=0;i<text.length;i++){
 
-  for(
-    let i=0;
-    i<text.length;
-    i++
-  ){
-
-    const char =
-      text[i];
-
-    const next =
-      text[i+1];
-
+    const char = text[i];
+    const next = text[i+1];
 
     if(char === '"'){
 
@@ -528,8 +477,7 @@ function parseCSV(text){
 
       }else{
 
-        quoted =
-          !quoted;
+        quoted = !quoted;
 
       }
 
@@ -539,7 +487,6 @@ function parseCSV(text){
     ){
 
       row.push(field);
-
       field = "";
 
     }else if(
@@ -558,18 +505,11 @@ function parseCSV(text){
       }
 
       row.push(field);
-
       field = "";
 
-
-      if(
-        row.some(ne)
-      ){
-
+      if(row.some(ne)){
         rows.push(row);
-
       }
-
 
       row = [];
 
@@ -581,7 +521,6 @@ function parseCSV(text){
 
   }
 
-
   if(
     field ||
     row.length
@@ -589,17 +528,11 @@ function parseCSV(text){
 
     row.push(field);
 
-
-    if(
-      row.some(ne)
-    ){
-
+    if(row.some(ne)){
       rows.push(row);
-
     }
 
   }
-
 
   return rows;
 }
@@ -615,12 +548,10 @@ function campaignFromCustomerID(id){
     String(id || "")
       .trim();
 
-
   const match =
     value.match(
       /^(.*)-(\d{6})$/
     );
-
 
   return match
     ? match[1]
@@ -636,74 +567,30 @@ function campaignFromFilename(filename){
 
   let name =
     String(filename || "")
-      .replace(
-        /\.csv$/i,
-        ""
-      )
+      .replace(/\.csv$/i,"")
       .trim();
-
 
   /*
     Examples:
 
-    ... Open Report1
-    ... Open Report 2
-    ... Permanent Bounce Back
-    ... Temporary Bounce Back
-    ... SPAM
-    ... Summary
+    20260812_Regulatory-eDM-B1_1604 Permanent Bounce Back
+    ->
+    20260812_Regulatory-eDM-B1_1604
+
+    20260812_Regulatory-eDM-B1_1604 Temporary Bounce Back
+    ->
+    20260812_Regulatory-eDM-B1_1604
   */
 
-  name =
-    name.replace(
-      /\s+open\s*report\s*\d*\s*$/i,
-      ""
-    );
+  name = name
+    .replace(/\s+(permanent|hard)\s+bounce.*$/i,"")
+    .replace(/\s+(temporary|soft)\s+bounce.*$/i,"")
+    .replace(/\s+spam.*$/i,"")
+    .replace(/\s+open\s*report.*$/i,"")
+    .replace(/\s+summary.*$/i,"")
+    .trim();
 
-
-  name =
-    name.replace(
-      /\s+permanent\s+bounce\s+back\s*$/i,
-      ""
-    );
-
-
-  name =
-    name.replace(
-      /\s+temporary\s+bounce\s+back\s*$/i,
-      ""
-    );
-
-
-  name =
-    name.replace(
-      /\s+hard\s+bounce.*$/i,
-      ""
-    );
-
-
-  name =
-    name.replace(
-      /\s+soft\s+bounce.*$/i,
-      ""
-    );
-
-
-  name =
-    name.replace(
-      /\s+spam\s*$/i,
-      ""
-    );
-
-
-  name =
-    name.replace(
-      /\s+summary\s*$/i,
-      ""
-    );
-
-
-  return name.trim();
+  return name;
 }
 
 
@@ -721,7 +608,6 @@ function getFileType(filename){
         " "
       );
 
-
   if(
     (
       name.includes("permanent") ||
@@ -731,9 +617,7 @@ function getFileType(filename){
   ){
 
     return "hard";
-
   }
-
 
   if(
     (
@@ -744,18 +628,14 @@ function getFileType(filename){
   ){
 
     return "soft";
-
   }
-
 
   if(
     name.includes("spam")
   ){
 
     return "spam";
-
   }
-
 
   if(
     name.includes("open") &&
@@ -763,9 +643,7 @@ function getFileType(filename){
   ){
 
     return "open";
-
   }
-
 
   return "unknown";
 }
@@ -777,25 +655,21 @@ function getFileType(filename){
 
 function getCampaign(campaignID){
 
-  if(
-    !M[campaignID]
-  ){
+  if(!M[campaignID]){
 
     M[campaignID] = {
 
       /*
-        Open Report data:
-        unique by ALT_CUSTOMER_ID.
+        Open Report data.
+        Unique by ALT_CUSTOMER_ID.
       */
 
       customers:
         new Map(),
 
-
       /*
-        Sets are ONLY used to identify
-        whether a customer bounced when
-        exporting delivered email list.
+        Set only used when exporting
+        Delivered Email List.
       */
 
       hardIDs:
@@ -807,13 +681,8 @@ function getCampaign(campaignID){
       spamIDs:
         new Set(),
 
-
       /*
-        KPI counters.
-
-        IMPORTANT:
-        Every data row is counted.
-        NO deduplication.
+        KPI source-row counters.
       */
 
       hardCount:
@@ -829,7 +698,6 @@ function getCampaign(campaignID){
 
   }
 
-
   return M[campaignID];
 }
 
@@ -841,7 +709,6 @@ function getCampaign(campaignID){
 async function importFiles(files){
 
   M = {};
-
 
   const diagnostic = {
 
@@ -859,10 +726,8 @@ async function importFiles(files){
 
   };
 
-
   q("#status").textContent =
     "Processing…";
-
 
   const normalizeHeader =
     value =>
@@ -894,7 +759,6 @@ async function importFiles(files){
         file.name
       );
 
-
     if(
       fileType ===
       "unknown"
@@ -918,9 +782,7 @@ async function importFiles(files){
     if(
       rows.length < 2
     ){
-
       continue;
-
     }
 
 
@@ -933,40 +795,30 @@ async function importFiles(files){
     const customerIndex =
       headers.findIndex(
         header =>
-          header ===
-            "ALT_CUSTOMER_ID" ||
-          header ===
-            "ALTCUSTOMERID"
+          header === "ALT_CUSTOMER_ID" ||
+          header === "ALTCUSTOMERID"
       );
 
 
     const sentIndex =
       headers.findIndex(
         header =>
-          header ===
-            "SENT_DATE" ||
-          header ===
-            "SENTDATE"
+          header === "SENT_DATE" ||
+          header === "SENTDATE"
       );
 
 
     const openIndex =
       headers.findIndex(
         header =>
-          header ===
-            "OPEN_DATE" ||
-          header ===
-            "OPENDATE"
+          header === "OPEN_DATE" ||
+          header === "OPENDATE"
       );
 
 
     /*
-      Campaign ID is first attempted
-      from filename.
-
-      This is especially important for
-      Bounce files because the whole
-      source file belongs to one campaign.
+      For Bounce/SPAM:
+      Campaign is locked from filename.
     */
 
     const fileCampaign =
@@ -1019,9 +871,7 @@ async function importFiles(files){
         if(
           !customerID
         ){
-
           continue;
-
         }
 
 
@@ -1029,17 +879,15 @@ async function importFiles(files){
 
 
         /*
-          Prefer Campaign ID from
-          ALT_CUSTOMER_ID for Open Report.
+          Open Report campaign comes
+          from ALT_CUSTOMER_ID.
         */
 
         const campaignID =
 
           campaignFromCustomerID(
             customerID
-          ) ||
-
-          fileCampaign;
+          );
 
 
         const campaign =
@@ -1087,7 +935,7 @@ async function importFiles(files){
 
 
         /*
-          Column B = email address.
+          Column B = Email.
         */
 
         if(
@@ -1106,8 +954,8 @@ async function importFiles(files){
         /*
           DELIVERY ATTEMPT
 
-          Any non-empty SENT_DATE counts,
-          including Delivery failed.
+          Any non-empty SENT_DATE.
+          Delivery failed counts.
         */
 
         if(
@@ -1151,7 +999,7 @@ async function importFiles(files){
           UNIQUE CLICK
 
           A-D fixed.
-          E onward dynamic link columns.
+          E onward = dynamic links.
         */
 
         for(
@@ -1187,6 +1035,8 @@ async function importFiles(files){
 
     /* ======================================================
        HARD BOUNCE
+
+       ALL ROWS GO TO CAMPAIGN FROM FILENAME
     ====================================================== */
 
     else if(
@@ -1197,17 +1047,13 @@ async function importFiles(files){
       diagnostic.hardFiles++;
 
 
-      /*
-        Entire source report belongs to
-        fileCampaign.
+      const campaignID =
+        fileCampaign;
 
-        Every populated source row counts
-        toward Hard Bounce KPI.
-      */
 
       const campaign =
         getCampaign(
-          fileCampaign
+          campaignID
         );
 
 
@@ -1222,7 +1068,7 @@ async function importFiles(files){
 
 
         /*
-          Ignore completely blank CSV rows.
+          Ignore completely empty rows.
         */
 
         if(
@@ -1234,21 +1080,23 @@ async function importFiles(files){
         }
 
 
-        diagnostic.hardRows++;
-
-
         /*
-          THIS IS THE KPI COUNT.
+          CRITICAL:
+
+          Every source row = 1 Hard Bounce.
+
+          No unique calculation.
           No Set.size.
-          No deduplication.
         */
 
         campaign.hardCount++;
 
+        diagnostic.hardRows++;
+
 
         /*
-          Keep ALT ID Set only for
-          delivered email exclusion.
+          ALT Customer ID is stored only
+          for Delivered Email exclusion.
         */
 
         if(
@@ -1282,6 +1130,8 @@ async function importFiles(files){
 
     /* ======================================================
        SOFT BOUNCE
+
+       ALL ROWS GO TO CAMPAIGN FROM FILENAME
     ====================================================== */
 
     else if(
@@ -1292,9 +1142,13 @@ async function importFiles(files){
       diagnostic.softFiles++;
 
 
+      const campaignID =
+        fileCampaign;
+
+
       const campaign =
         getCampaign(
-          fileCampaign
+          campaignID
         );
 
 
@@ -1317,20 +1171,14 @@ async function importFiles(files){
         }
 
 
-        diagnostic.softRows++;
-
-
         /*
-          KPI:
-          count every source-report row.
+          Every source row = 1 Soft Bounce.
         */
 
         campaign.softCount++;
 
+        diagnostic.softRows++;
 
-        /*
-          Set only for email exclusion.
-        */
 
         if(
           customerIndex >= 0
@@ -1363,6 +1211,8 @@ async function importFiles(files){
 
     /* ======================================================
        SPAM
+
+       CAMPAIGN FROM FILENAME
     ====================================================== */
 
     else if(
@@ -1373,9 +1223,13 @@ async function importFiles(files){
       diagnostic.spamFiles++;
 
 
+      const campaignID =
+        fileCampaign;
+
+
       const campaign =
         getCampaign(
-          fileCampaign
+          campaignID
         );
 
 
@@ -1398,9 +1252,9 @@ async function importFiles(files){
         }
 
 
-        diagnostic.spamRows++;
-
         campaign.spamCount++;
+
+        diagnostic.spamRows++;
 
 
         if(
@@ -1434,6 +1288,52 @@ async function importFiles(files){
   }
 
 
+  /*
+    DIAGNOSTIC PER CAMPAIGN
+  */
+
+  const campaignDiagnostic =
+
+    Object.keys(M)
+
+      .sort()
+
+      .map(
+        campaignID => {
+
+          const shortID =
+            campaignID.match(
+              /B\d+_\d+$/i
+            )?.[0] ||
+            campaignID;
+
+
+          return (
+
+            `${shortID}: ` +
+
+            `Hard ${num(
+              M[campaignID].hardCount
+            )} | ` +
+
+            `Soft ${num(
+              M[campaignID].softCount
+            )}`
+
+          );
+
+        }
+      )
+
+      .join(" || ");
+
+
+  console.log(
+    "BOUNCE DIAGNOSTIC:",
+    campaignDiagnostic
+  );
+
+
   buildSetup();
 
   render();
@@ -1457,9 +1357,7 @@ async function importFiles(files){
       diagnostic.softRows
     )} rows | ` +
 
-    `SPAM ${num(
-      diagnostic.spamRows
-    )} rows` +
+    campaignDiagnostic +
 
     (
       diagnostic.unknownFiles
@@ -1496,6 +1394,7 @@ function buildSetup(){
   box.innerHTML =
 
     campaigns.length
+
       ? `
 
         <b>
@@ -1522,11 +1421,6 @@ function buildSetup(){
 
             }
 
-
-            /*
-              Default DNA =
-              Delivery Attempt.
-            */
 
             if(
               !META[
@@ -1579,6 +1473,7 @@ function buildSetup(){
         ).join("")}
 
       `
+
       : "";
 
 }
@@ -1642,28 +1537,19 @@ function calc(campaignID){
 
 
   /*
-    IMPORTANT:
+    CRITICAL:
 
-    HARD / SOFT = ROW COUNTS.
-
-    Never use Set.size here.
+    KPI uses row count,
+    NOT Set.size.
   */
 
   const hardBounce =
-    Number(
-      campaign.hardCount || 0
-    );
+    campaign.hardCount || 0;
 
 
   const softBounce =
-    Number(
-      campaign.softCount || 0
-    );
+    campaign.softCount || 0;
 
-
-  /*
-    FAILED C-D
-  */
 
   const failed =
 
@@ -1675,10 +1561,6 @@ function calc(campaignID){
         )
       : 0;
 
-
-  /*
-    TOTAL DELIVERED
-  */
 
   const totalDelivered =
 
@@ -1693,10 +1575,6 @@ function calc(campaignID){
 
     );
 
-
-  /*
-    TOTAL FAILED
-  */
 
   const totalFailed =
 
@@ -2461,15 +2339,6 @@ function exportDeliveredEmails(
     ]
     of campaign.customers.entries()
   ){
-
-    /*
-      Delivered email:
-
-      - Delivery Attempt
-      - not Invalid Email
-      - not in Permanent Bounce
-      - not in Temporary Bounce
-    */
 
     const delivered =
 
